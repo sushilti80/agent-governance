@@ -1,0 +1,23 @@
+id: LR-2026-0001
+observed_failure:
+  repository: example/infrastructure-live
+  task: environment scope resolution
+  description: Agent expanded an explicitly requested environment scope.
+evidence:
+  - run:example-001
+classification:
+  cause: scope-resolution
+  layer: skill
+principles:
+  - AGP-003
+  - AGP-011
+proposed_change:
+  target: environment-resolution skill
+  description: Resolve target environments from the request and repository evidence without silent expansion.
+evaluation:
+  case: SCOPE-001
+  fails_before: true
+  passes_after: true
+promotion:
+  scope: shared-skill
+  status: candidate

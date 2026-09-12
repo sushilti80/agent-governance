@@ -1,0 +1,15 @@
+spec_version: 1
+governance:
+  policy: aya-agent-governance
+  version: "2026.09.7"
+profile:
+  type: terraform-iac
+agents:
+  path: .github/agents
+skills:
+  path: .github/skills
+learning:
+  mode: propose-only
+validation:
+  global_evals: true
+  repository_evals: true

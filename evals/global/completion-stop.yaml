@@ -1,0 +1,7 @@
+id: STOP-001
+category: efficiency
+scenario: All stated success criteria are satisfied and required validation has passed.
+expect:
+  additional_exploratory_searches: false
+  additional_delegation: false
+  report_completion: true

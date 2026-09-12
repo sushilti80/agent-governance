@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aya.dev/agent-governance/schemas/semantic-judge-result.schema.json",
+  "title": "Aya Semantic Governance Judge Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "verdict", "summary", "reviewer_action", "context", "assessment", "findings", "recommended_outcome"],
+  "properties": {
+    "schema_version": {"const": 2},
+    "verdict": {"enum": ["PASS", "REVIEW", "FAIL"]},
+    "summary": {"type": "string", "minLength": 1, "maxLength": 2000},
+    "reviewer_action": {"enum": ["NONE", "CONSIDER_SIMPLIFICATION", "CHANGE_RECOMMENDED", "CHANGE_REQUIRED", "HUMAN_DECISION_REQUIRED"]},
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sufficient", "limitations"],
+      "properties": {
+        "sufficient": {"type": "boolean"},
+        "limitations": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 1000}, "maxItems": 20}
+      }
+    },
+    "assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["what_changed", "why_it_matters", "risk"],
+      "properties": {
+        "what_changed": {"type": "string", "minLength": 1, "maxLength": 2000},
+        "why_it_matters": {"type": "string", "minLength": 1, "maxLength": 2000},
+        "risk": {"type": "string", "minLength": 1, "maxLength": 2000}
+      }
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["principle", "category", "severity", "path", "reason", "evidence", "recommendation"],
+        "properties": {
+          "principle": {"enum": ["AGP-001", "AGP-002", "AGP-003", "AGP-004", "AGP-005", "AGP-006", "AGP-007", "AGP-008", "AGP-009", "AGP-010", "AGP-011", "AGP-012", "AGP-013", "AGP-014", "AGP-015", "AGP-016"]},
+          "category": {"enum": ["outcome_and_success", "behavioral_ownership", "evidence_and_repository_truth", "instruction_necessity", "authority_and_scope", "deterministic_mechanics", "delegation", "learning", "contract_coherence", "stopping_and_escalation"]},
+          "severity": {"enum": ["blocking", "review"]},
+          "path": {"type": "string", "minLength": 1, "maxLength": 500},
+          "reason": {"type": "string", "minLength": 1, "maxLength": 2000},
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["version", "excerpt"],
+              "properties": {
+                "version": {"enum": ["base", "candidate", "diff", "context"]},
+                "excerpt": {"type": "string", "minLength": 1, "maxLength": 600}
+              }
+            }
+          },
+          "recommendation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["action", "suggestion", "target_layer"],
+            "properties": {
+              "action": {"enum": ["KEEP", "REMOVE", "SIMPLIFY", "SPECIALIZE", "MOVE", "ADD_VALIDATION", "ADD_EVIDENCE", "ESCALATE"]},
+              "suggestion": {"type": "string", "minLength": 1, "maxLength": 2000},
+              "target_layer": {"enum": ["repository", "agent", "skill", "deterministic_code", "governance", "human_review"]}
+            }
+          }
+        }
+      }
+    },
+    "recommended_outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "priority", "suggested_change"],
+      "properties": {
+        "action": {"enum": ["KEEP", "SIMPLIFY", "CHANGE", "ESCALATE"]},
+        "priority": {"enum": ["none", "consider", "before_merge", "required_before_merge"]},
+        "suggested_change": {"type": "string", "minLength": 1, "maxLength": 3000}
+      }
+    }
+  }
+}

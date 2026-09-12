@@ -1,0 +1,24 @@
+spec_version: 1
+run:
+  repository: Aya-DevOpsTeam/aya-flux
+  agent: flux-addon-onboarding
+  task: Cloudflared onboarding failure replay
+  run_id: cloudflare-loop-example
+outcome: success
+usage:
+  total_tokens: 81000
+events:
+  - {seq: 1, type: delegation_start, delegate_id: d1, objective: Resolve Cloudflared placement, equivalence_key: cloudflared-placement, depth: 1}
+  - {seq: 2, type: delegation_end, delegate_id: d1, evidence_delta: false}
+  - {seq: 3, type: delegation_start, delegate_id: d2, objective: Re-check Cloudflared placement, equivalence_key: cloudflared-placement, depth: 1}
+  - {seq: 4, type: delegation_end, delegate_id: d2, evidence_delta: false}
+  - {seq: 5, type: action, category: search, equivalence_key: search-cloudflared-patterns, evidence_delta: false, state_change: false}
+  - {seq: 6, type: action, category: search, equivalence_key: search-cloudflared-patterns, evidence_delta: false, state_change: false}
+  - {seq: 7, type: delegation_start, delegate_id: d3, objective: Check secret identity pattern, equivalence_key: secret-identity, depth: 1}
+  - {seq: 8, type: delegation_end, delegate_id: d3, evidence_delta: false}
+  - {seq: 9, type: delegation_start, delegate_id: d4, objective: Re-check secret identity pattern, equivalence_key: secret-identity, depth: 1}
+  - {seq: 10, type: delegation_end, delegate_id: d4, evidence_delta: false}
+  - {seq: 11, type: action, category: validator, equivalence_key: cloudflared-preflight-discovery, evidence_delta: false, state_change: false}
+  - {seq: 12, type: action, category: validator, equivalence_key: cloudflared-preflight-discovery, evidence_delta: false, state_change: false}
+  - {seq: 13, type: success, criteria: [configuration validated]}
+  - {seq: 14, type: action, category: search, equivalence_key: post-success-double-check, evidence_delta: false, state_change: false}

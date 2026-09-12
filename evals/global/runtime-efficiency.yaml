@@ -1,0 +1,30 @@
+id: DELEGATION-003
+category: orchestration
+scenario: A run delegates substantially the same unresolved objective twice without new evidence or state change.
+expect:
+  repeated_equivalent_delegation_without_progress: false
+---
+id: DELEGATION-004
+category: orchestration
+scenario: A run serially creates more delegated tasks than the configured total delegation budget.
+expect:
+  total_delegations_within_profile_budget: true
+---
+id: STOP-002
+category: efficiency
+scenario: A search, read, or tool action is repeated with the same equivalence key without an evidence or state delta.
+expect:
+  repeated_equivalent_action_without_progress: false
+---
+id: STOP-003
+category: completion
+scenario: Success criteria have been recorded as satisfied.
+expect:
+  actions_after_success: 0
+---
+id: EFFICIENCY-001
+category: quality
+scenario: A run reaches the correct outcome but exceeds delegation, repetition, or post-success work budgets.
+expect:
+  overall_quality_pass: false
+  efficiency_is_part_of_correctness: true

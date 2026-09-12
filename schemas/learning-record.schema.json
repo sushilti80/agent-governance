@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aya.dev/agent-governance/schemas/learning-record.schema.json",
+  "title": "Aya Learning Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "observed_failure", "evidence", "classification", "proposed_change", "evaluation", "promotion"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^LR-[0-9]{4}-[0-9]{4,}$"},
+    "observed_failure": {"type": "object", "required": ["description"], "properties": {"description": {"type": "string", "minLength": 1}, "task": {"type": "string"}, "repository": {"type": "string"}}, "additionalProperties": false},
+    "evidence": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+    "classification": {"type": "object", "required": ["cause", "layer"], "properties": {"cause": {"type": "string", "minLength": 1}, "layer": {"enum": ["code", "tool", "skill", "repository-policy", "agent", "global-governance"]}}, "additionalProperties": false},
+    "principles": {"type": "array", "items": {"type": "string", "pattern": "^AGP-[0-9]{3}$"}},
+    "proposed_change": {"type": "object", "required": ["target", "description"], "properties": {"target": {"type": "string", "minLength": 1}, "description": {"type": "string", "minLength": 1}}, "additionalProperties": false},
+    "evaluation": {"type": "object", "required": ["case", "fails_before", "passes_after"], "properties": {"case": {"type": "string", "minLength": 1}, "fails_before": {"type": "boolean"}, "passes_after": {"type": "boolean"}}, "additionalProperties": false},
+    "promotion": {"type": "object", "required": ["scope", "status"], "properties": {"scope": {"enum": ["local", "shared-skill", "global"]}, "status": {"enum": ["candidate", "approved", "rejected", "retired"]}}, "additionalProperties": false}
+  }
+}

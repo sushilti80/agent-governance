@@ -1,0 +1,16 @@
+spec_version: 1
+run:
+  repository: Aya-DevOpsTeam/aya-flux
+  agent: flux-addon-onboarding
+  task: Three independent analyses
+outcome: success
+usage:
+  total_tokens: 24000
+events:
+  - {seq: 1, type: delegation_start, delegate_id: d1, objective: Analyze Flux wiring, equivalence_key: flux-wiring, depth: 1}
+  - {seq: 2, type: delegation_start, delegate_id: d2, objective: Analyze secret identity, equivalence_key: secret-identity, depth: 1}
+  - {seq: 3, type: delegation_start, delegate_id: d3, objective: Analyze Kustomize validation, equivalence_key: kustomize-validation, depth: 1}
+  - {seq: 4, type: delegation_end, delegate_id: d1, evidence_delta: true}
+  - {seq: 5, type: delegation_end, delegate_id: d2, evidence_delta: true}
+  - {seq: 6, type: delegation_end, delegate_id: d3, evidence_delta: true}
+  - {seq: 7, type: success, criteria: [all independent analyses synthesized]}

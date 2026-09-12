@@ -1,0 +1,16 @@
+spec_version:
+  current: 1
+  supported:
+    - 1
+  breaking_change_requires_increment: true
+
+governance_version:
+  source: VERSION
+  format: calendar
+  tag_prefix: v
+  compatibility: exact
+  immutable_tags: true
+
+release:
+  changelog_required: true
+  protected_tag_required: true

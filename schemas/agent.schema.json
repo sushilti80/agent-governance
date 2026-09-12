@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aya.dev/agent-governance/schemas/agent.schema.json",
+  "title": "Aya Agent Metadata",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["name", "mission", "scope", "authority", "evidence", "success_criteria"],
+  "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "mission": {"type": "string", "minLength": 1},
+    "scope": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "authority": {
+      "type": "object",
+      "required": ["inspect", "mutate", "external_actions"],
+      "properties": {
+        "inspect": {"type": "boolean"},
+        "mutate": {"type": "boolean"},
+        "external_actions": {"type": "boolean"}
+      }
+    },
+    "evidence": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "success_criteria": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "escalation": {"type": "array", "items": {"type": "string"}},
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "max_delegation_depth": {"type": "integer", "minimum": 0, "maximum": 3},
+        "max_parallel_agents": {"type": "integer", "minimum": 0, "maximum": 10},
+        "tool_warning_budget": {"type": "integer", "minimum": 1},
+        "tool_hard_limit": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

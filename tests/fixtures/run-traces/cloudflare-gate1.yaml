@@ -1,0 +1,9 @@
+spec_version: 1
+run:
+  repository: Aya-DevOpsTeam/aya-flux
+  agent: flux-addon-onboarding
+  task: Cloudflared request-only Gate 1
+outcome: success
+events:
+  - {seq: 1, type: action, category: validator, equivalence_key: cloudflared-preflight-user, evidence_delta: true, state_change: false, description: Run request-only deterministic validator once}
+  - {seq: 2, type: success, criteria: [PREFLIGHT_USER PASS]}

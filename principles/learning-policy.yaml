@@ -1,0 +1,30 @@
+spec_version: 1
+policy:
+  mode: propose-only
+  promotion_firewall: true
+  runtime_self_modification: prohibited
+  requirements:
+    - Capture an observed failure, risk, or organizational invariant as evidence.
+    - Classify the smallest correct remediation layer before proposing prompt changes.
+    - Add or identify a failing evaluation before behavioral prompt promotion, except explicit organization invariants.
+    - Demonstrate the candidate passes relevant global and repository evaluations.
+    - Measure material efficiency regressions for agent or skill behavior changes.
+    - Require governed pull-request review before promotion.
+  global_promotion:
+    require_one_of:
+      - repeated_failure_across_multiple_contexts
+      - serious_safety_or_governance_defect
+      - explicit_organizational_invariant
+    require:
+      - evidence
+      - evaluation
+      - lower_layer_analysis
+      - duplication_analysis
+      - regression_result
+  retirement:
+    enabled: true
+    triggers:
+      - instruction_no_longer_changes_eval_outcome
+      - deterministic_tool_now_enforces_behavior
+      - skill_now_owns_procedure
+      - newer_model_passes_without_instruction

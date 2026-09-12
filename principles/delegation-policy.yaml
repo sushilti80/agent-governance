@@ -1,0 +1,13 @@
+spec_version: 1
+policy:
+  purpose: Parallelize genuinely independent work, not uncertainty.
+  invariants:
+    - Primary agent retains responsibility for synthesis and completion.
+    - Do not delegate a sequential dependency merely because the task is complex.
+    - Do not recursively spawn equivalent agents.
+    - Stop delegation when success criteria are satisfied.
+  recommended_defaults:
+    max_depth: 1
+    max_parallel_agents: 3
+  exceptions:
+    require_explicit_profile_override: true

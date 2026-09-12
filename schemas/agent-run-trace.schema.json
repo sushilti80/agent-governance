@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aya.dev/agent-governance/schemas/agent-run-trace.schema.json",
+  "title": "Aya Agent Run Trace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["spec_version", "run", "outcome", "events"],
+  "properties": {
+    "spec_version": {"const": 1},
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "agent", "task"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 1},
+        "agent": {"type": "string", "minLength": 1},
+        "task": {"type": "string", "minLength": 1},
+        "run_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "outcome": {"enum": ["success", "blocked", "no_change", "failure"]},
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "total_tokens": {"type": "integer", "minimum": 0},
+        "input_tokens": {"type": "integer", "minimum": 0},
+        "output_tokens": {"type": "integer", "minimum": 0}
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {"$ref": "#/$defs/delegationStart"},
+          {"$ref": "#/$defs/delegationEnd"},
+          {"$ref": "#/$defs/action"},
+          {"$ref": "#/$defs/success"}
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"outcome": {"const": "success"}},
+        "required": ["outcome"]
+      },
+      "then": {
+        "properties": {
+          "events": {
+            "contains": {
+              "type": "object",
+              "properties": {"type": {"const": "success"}},
+              "required": ["type"]
+            },
+            "minContains": 1,
+            "maxContains": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "delegationStart": {
+      "type": "object", "additionalProperties": false,
+      "required": ["seq", "type", "delegate_id", "objective", "equivalence_key", "depth"],
+      "properties": {
+        "seq": {"type": "integer", "minimum": 1}, "type": {"const": "delegation_start"},
+        "delegate_id": {"type": "string", "minLength": 1}, "objective": {"type": "string", "minLength": 1},
+        "equivalence_key": {"type": "string", "minLength": 1}, "depth": {"type": "integer", "minimum": 1}
+      }
+    },
+    "delegationEnd": {
+      "type": "object", "additionalProperties": false,
+      "required": ["seq", "type", "delegate_id", "evidence_delta"],
+      "properties": {
+        "seq": {"type": "integer", "minimum": 1}, "type": {"const": "delegation_end"},
+        "delegate_id": {"type": "string", "minLength": 1}, "evidence_delta": {"type": "boolean"}
+      }
+    },
+    "action": {
+      "type": "object", "additionalProperties": false,
+      "required": ["seq", "type", "category", "equivalence_key", "evidence_delta", "state_change"],
+      "properties": {
+        "seq": {"type": "integer", "minimum": 1}, "type": {"const": "action"},
+        "category": {"enum": ["read", "search", "run", "validator", "edit", "other"]},
+        "equivalence_key": {"type": "string", "minLength": 1}, "evidence_delta": {"type": "boolean"},
+        "state_change": {"type": "boolean"}, "description": {"type": "string"}
+      }
+    },
+    "success": {
+      "type": "object", "additionalProperties": false,
+      "required": ["seq", "type"],
+      "properties": {
+        "seq": {"type": "integer", "minimum": 1}, "type": {"const": "success"},
+        "criteria": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

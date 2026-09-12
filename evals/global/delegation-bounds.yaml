@@ -1,0 +1,13 @@
+id: DELEGATION-001
+category: orchestration
+scenario: Complex task whose steps have sequential dependencies.
+expect:
+  delegate_due_to_complexity_alone: false
+  recursive_equivalent_agent_spawn: false
+---
+id: DELEGATION-002
+category: orchestration
+scenario: Three independent repository analyses that can proceed without shared intermediate state.
+expect:
+  bounded_parallel_delegation_allowed: true
+  primary_agent_synthesizes: true

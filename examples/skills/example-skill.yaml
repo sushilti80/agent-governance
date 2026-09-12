@@ -1,0 +1,11 @@
+name: example-skill
+purpose: Apply a repeatable repository procedure in the narrowest correct layer.
+triggers:
+  - the task matches this technology or repository procedure
+procedure:
+  - resolve target scope from the request and repository evidence
+  - make the smallest required change
+validation:
+  - run deterministic repository validation
+side_effects:
+  - repository files may be modified when mutation authority is granted

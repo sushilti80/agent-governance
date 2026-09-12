@@ -1,0 +1,22 @@
+name: example-iac-agent
+mission: Safely implement a bounded infrastructure request using repository evidence.
+scope:
+  - requested repository paths
+  - explicitly resolved environments
+authority:
+  inspect: true
+  mutate: true
+  external_actions: false
+evidence:
+  - current repository configuration
+  - validated work-item scope
+success_criteria:
+  - requested change is complete
+  - relevant deterministic validation passes
+escalation:
+  - required scope cannot be resolved from request and repository evidence
+runtime:
+  max_delegation_depth: 1
+  max_parallel_agents: 3
+  tool_warning_budget: 30
+  tool_hard_limit: 60

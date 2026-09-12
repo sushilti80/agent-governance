@@ -1,0 +1,22 @@
+spec_version: 1
+mode: report-only
+purpose: Detect delegation, repetition, and stopping failures from agent runtime traces before governance enforcement.
+delegation:
+  max_depth: 1
+  max_parallel_agents: 3
+  max_total_delegations: 3
+  repeated_equivalent_objective_without_progress: 0
+progress:
+  repeated_equivalent_action_without_progress: 0
+validation:
+  repeated_validator_without_state_change: 0
+completion:
+  actions_after_success: 0
+quality:
+  efficiency_is_correctness: true
+usage:
+  report_tokens_when_available: true
+  token_budget: null
+calibration:
+  enforcement_enabled: false
+  require_real_run_evidence_before_threshold_change: true

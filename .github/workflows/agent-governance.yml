@@ -1,0 +1,305 @@
+name: Agent Governance
+
+on:
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+    secrets:
+      governance_app_client_id:
+        required: true
+      governance_app_private_key:
+        required: true
+      COPILOT_GITHUB_TOKEN:
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-governance-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deterministic-governance:
+    name: deterministic-governance
+    runs-on: aya-devops-rs
+    steps:
+      - name: Checkout target repository
+        uses: actions/checkout@v5
+        with:
+          path: target
+          fetch-depth: 0
+
+      - name: Create governance repository token
+        id: governance-token
+        if: ${{ job.workflow_repository != github.repository }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.governance_app_client_id }}
+          private-key: ${{ secrets.governance_app_private_key }}
+          owner: ${{ github.repository_owner }}
+          repositories: agent-governance
+          permission-contents: read
+
+      - name: Checkout exact governance policy source
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: policy
+          token: ${{ steps.governance-token.outputs.token || github.token }}
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: policy/requirements-governance.txt
+
+      - name: Install governance dependencies
+        run: python -m pip install -r policy/requirements-governance.txt
+
+      - name: Run governance checks
+        run: python policy/scripts/governance_check.py --policy-root policy --target-root target
+
+      - name: Run governance regression tests
+        run: python -m unittest discover -s policy/tests -p 'test_*.py'
+
+      - name: Compile governance scripts
+        run: python -m py_compile policy/scripts/*.py
+
+  classify-change:
+    name: classify-change
+    runs-on: aya-devops-rs
+    outputs:
+      highest_risk: ${{ steps.classify.outputs.highest_risk }}
+      semantic_review_required: ${{ steps.classify.outputs.semantic_review_required }}
+      semantic_contract_changed: ${{ steps.classify.outputs.semantic_contract_changed }}
+    steps:
+      - name: Checkout target repository
+        uses: actions/checkout@v5
+        with:
+          path: target
+          fetch-depth: 0
+
+      - name: Create governance repository token
+        id: governance-token
+        if: ${{ job.workflow_repository != github.repository }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.governance_app_client_id }}
+          private-key: ${{ secrets.governance_app_private_key }}
+          owner: ${{ github.repository_owner }}
+          repositories: agent-governance
+          permission-contents: read
+
+      - name: Checkout exact governance policy source
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: policy
+          token: ${{ steps.governance-token.outputs.token || github.token }}
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - id: classify
+        name: Classify changed files
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ -n "$BASE_SHA" ] && [ -n "$HEAD_SHA" ]; then
+            mapfile -t files < <(git -C target diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          else
+            files=()
+          fi
+          python policy/scripts/check_changed_agent_files.py "${files[@]}" | tee classification.txt
+          risk=$(awk -F= '/^highest_risk=/{print $2}' classification.txt)
+          semantic=$(awk -F= '/^semantic_review_required=/{print $2}' classification.txt)
+          contract=$(awk -F= '/^semantic_contract_changed=/{print $2}' classification.txt)
+          # Semantic-contract smoke is only for changes to the central governance implementation.
+          # Consumer workflow/config changes remain deterministic-only and must not spend a Luna request.
+          if [ "${{ job.workflow_repository }}" != "${{ github.repository }}" ]; then
+            contract=false
+          fi
+          echo "highest_risk=$risk" >> "$GITHUB_OUTPUT"
+          echo "semantic_review_required=$semantic" >> "$GITHUB_OUTPUT"
+          echo "semantic_contract_changed=$contract" >> "$GITHUB_OUTPUT"
+
+      - name: Add summary
+        run: |
+          echo '## Agent governance change classification' >> "$GITHUB_STEP_SUMMARY"
+          cat classification.txt >> "$GITHUB_STEP_SUMMARY"
+
+  semantic-governance:
+    name: semantic-governance-report
+    needs: classify-change
+    if: ${{ needs.classify-change.outputs.semantic_review_required == 'true' || needs.classify-change.outputs.semantic_contract_changed == 'true' }}
+    runs-on: aya-devops-rs
+    permissions:
+      contents: read
+      copilot-requests: write
+    steps:
+      - name: Checkout target repository
+        uses: actions/checkout@v5
+        with:
+          path: target
+          fetch-depth: 0
+
+      - name: Create governance repository token
+        id: governance-token
+        if: ${{ job.workflow_repository != github.repository }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.governance_app_client_id }}
+          private-key: ${{ secrets.governance_app_private_key }}
+          owner: ${{ github.repository_owner }}
+          repositories: agent-governance
+          permission-contents: read
+
+      - name: Checkout exact governance policy source
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: policy
+          token: ${{ steps.governance-token.outputs.token || github.token }}
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: policy/requirements-governance.txt
+
+      - name: Install governance dependencies
+        run: python -m pip install -r policy/requirements-governance.txt
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Install and verify pinned Copilot CLI
+        shell: bash
+        run: |
+          npm install -g @github/copilot@1.0.83
+          copilot --version
+          copilot --help > copilot-help.txt
+          for option in \
+            '--silent' \
+            '--model' \
+            '--reasoning-effort' \
+            '--no-ask-user' \
+            '--no-custom-instructions' \
+            '--disable-builtin-mcps' \
+            '--deny-tool' \
+            '--no-auto-update' \
+            '--no-color' \
+            '--no-remote' \
+            '--no-remote-export'; do
+            if ! grep -Fq -- "$option" copilot-help.txt; then
+              echo "::error::Pinned Copilot CLI does not support required option: $option"
+              exit 1
+            fi
+          done
+
+      - name: Build bounded semantic context
+        if: ${{ needs.classify-change.outputs.semantic_review_required == 'true' }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python policy/scripts/build_semantic_context.py \
+            --base-sha "$BASE_SHA" \
+            --head-sha "$HEAD_SHA"
+          python policy/scripts/build_semantic_prompt.py
+
+      - name: Build semantic contract smoke context
+        if: ${{ needs.classify-change.outputs.semantic_review_required != 'true' && needs.classify-change.outputs.semantic_contract_changed == 'true' }}
+        shell: bash
+        run: |
+          mkdir -p .aya-semantic-judge
+          cat > .aya-semantic-judge/context.json <<'JSON'
+          {
+            "schema_version": 1,
+            "base_sha": "semantic-contract-smoke-base",
+            "head_sha": "semantic-contract-smoke-candidate",
+            "semantic_review_required": true,
+            "changed_semantic_files": [".github/agents/smoke.agent.md"],
+            "manifest": {"base": null, "candidate": null},
+            "components": [
+              {
+                "path": ".github/agents/smoke.agent.md",
+                "kind": "agent",
+                "changed": true,
+                "base": "Operate only within explicitly requested development resources. Validate required changes before completion.",
+                "candidate": "Operate only within explicitly requested development resources. Validate required changes before completion and stop when validation succeeds."
+              }
+            ],
+            "diff": "-Validate required changes before completion.\n+Validate required changes before completion and stop when validation succeeds.",
+            "context_limitations": [],
+            "omitted_paths": []
+          }
+          JSON
+          python policy/scripts/build_semantic_prompt.py
+
+      - id: judge
+        name: Evaluate with GPT-5.6 Luna
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set +e
+          cd "$GITHUB_WORKSPACE/.aya-semantic-judge"
+
+          if [ -z "${COPILOT_GITHUB_TOKEN:-}" ]; then
+            export COPILOT_GITHUB_TOKEN="$GITHUB_TOKEN"
+          fi
+
+          copilot \
+            -s \
+            --model gpt-5.6-luna \
+            --reasoning-effort medium \
+            --no-ask-user \
+            --no-custom-instructions \
+            --disable-builtin-mcps \
+            --deny-tool='read,shell,write,url,memory' \
+            --no-auto-update \
+            --no-color \
+            --no-remote \
+            --no-remote-export \
+            < prompt.txt \
+            > raw-result.json \
+            2> copilot.stderr
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" -ne 0 ]; then
+            echo "::error::Copilot CLI semantic judge failed with exit code $code"
+            sed -n '1,40p' copilot.stderr >&2
+          fi
+          exit "$code"
+
+      - name: Validate and summarize semantic result
+        if: ${{ always() }}
+        env:
+          JUDGE_EXIT_CODE: ${{ steps.judge.outputs.exit_code }}
+        shell: bash
+        run: |
+          : "${JUDGE_EXIT_CODE:=1}"
+          set +e
+          python policy/scripts/validate_semantic_result.py \
+            --mode report-only \
+            --judge-exit-code "$JUDGE_EXIT_CODE"
+          validation_code=$?
+          cat .aya-semantic-judge/summary.md >> "$GITHUB_STEP_SUMMARY"
+          exit "$validation_code"

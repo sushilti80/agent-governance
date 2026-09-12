@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aya.dev/agent-governance/schemas/governance-manifest.schema.json",
+  "title": "Aya Agent Governance Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["spec_version", "governance", "profile", "agents", "skills", "learning", "validation"],
+  "properties": {
+    "spec_version": {"const": 1},
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "version"],
+      "properties": {
+        "policy": {"const": "aya-agent-governance"},
+        "version": {"type": "string", "minLength": 1}
+      }
+    },
+    "profile": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {"type": {"type": "string", "minLength": 1}},
+      "additionalProperties": true
+    },
+    "agents": {"type": "object", "required": ["path"], "properties": {"path": {"type": "string", "minLength": 1}}, "additionalProperties": false},
+    "skills": {"type": "object", "required": ["path"], "properties": {"path": {"type": "string", "minLength": 1}}, "additionalProperties": false},
+    "learning": {"type": "object", "required": ["mode"], "properties": {"mode": {"const": "propose-only"}}, "additionalProperties": false},
+    "validation": {
+      "type": "object",
+      "required": ["global_evals", "repository_evals"],
+      "properties": {"global_evals": {"const": true}, "repository_evals": {"type": "boolean"}},
+      "additionalProperties": false
+    }
+  }
+}

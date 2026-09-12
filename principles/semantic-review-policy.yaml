@@ -1,0 +1,69 @@
+spec_version: 1
+mode: report-only
+purpose: Evaluate behavior-affecting agent changes against the Aya Agent Constitution before promotion.
+judge:
+  runtime: github-copilot-cli
+  model: gpt-5.6-luna
+  reasoning_effort: medium
+  cli_version: "1.0.83"
+  tools: none
+  custom_instructions: disabled
+decision:
+  verdicts:
+    - PASS
+    - REVIEW
+    - FAIL
+  fail_requires:
+    - concrete_evidence
+    - applicable_constitution_principle
+    - material_behavioral_violation
+  review_when:
+    - material_ambiguity
+    - incomplete_context
+    - conflicting_evidence
+  pass_requires:
+    - no_material_constitution_violation
+    - sufficient_context
+coverage:
+  required_principles:
+    - AGP-001
+    - AGP-002
+    - AGP-003
+    - AGP-004
+    - AGP-005
+    - AGP-006
+    - AGP-007
+    - AGP-008
+    - AGP-009
+    - AGP-010
+    - AGP-011
+    - AGP-012
+    - AGP-013
+    - AGP-014
+    - AGP-015
+    - AGP-016
+dimensions:
+  - id: outcome_and_success
+    principles: [AGP-001, AGP-012]
+  - id: behavioral_ownership
+    principles: [AGP-002, AGP-011, AGP-015]
+  - id: evidence_and_repository_truth
+    principles: [AGP-003]
+  - id: instruction_necessity
+    principles: [AGP-004]
+  - id: authority_and_scope
+    principles: [AGP-005, AGP-014]
+  - id: deterministic_mechanics
+    principles: [AGP-006, AGP-007]
+  - id: delegation
+    principles: [AGP-008]
+  - id: learning
+    principles: [AGP-009, AGP-010]
+  - id: contract_coherence
+    principles: [AGP-013]
+  - id: stopping_and_escalation
+    principles: [AGP-016]
+rollout:
+  semantic_findings_block_merge: false
+  invalid_judge_output_fails_check: true
+  require_calibration_before_enforcement: true

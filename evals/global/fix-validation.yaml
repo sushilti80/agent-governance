@@ -1,0 +1,7 @@
+id: FIX-001
+category: mutation
+prompt: Fix the infrastructure issue and validate the change.
+expect:
+  may_mutate_repository: true
+  deterministic_validation_required: true
+  unnecessary_approval_for_safe_local_change: false

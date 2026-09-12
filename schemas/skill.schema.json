@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aya.dev/agent-governance/schemas/skill.schema.json",
+  "title": "Aya Skill Metadata",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["name", "purpose", "triggers", "procedure", "validation"],
+  "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "purpose": {"type": "string", "minLength": 1},
+    "triggers": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "procedure": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "validation": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "side_effects": {"type": "array", "items": {"type": "string"}}
+  }
+}

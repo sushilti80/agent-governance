@@ -1,0 +1,11 @@
+spec_version: 1
+policy:
+  invariants:
+    - Expose only tools relevant to the active task where the runtime supports selective exposure.
+    - Prefer deterministic tools for formatting, parsing, validation, comparison, and bounded enumeration.
+    - Tool descriptions must be concise and precise about side effects.
+    - Mutation-capable tools require an explicit authority boundary in the governing agent or repository contract.
+    - Repeated equivalent searches without new evidence are an efficiency defect.
+  validation:
+    deterministic_after_mutation: required
+    record_failed_validation: required
