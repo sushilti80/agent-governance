@@ -33,11 +33,13 @@ See `docs/VERSIONING-AND-RELEASES.md` for compatibility and release rules.
 
 ## Use in your repository
 
-Paste this prompt in the consumer repo (do not fork or copy this policy repo):
+An organization that wants to **own** policy should fork or mirror this repository **once** into their org, release their own immutable tags, and point every product repo at that copy. Product repos should not clone or vendor the policy; they only pin the reusable workflow.
 
-> Wire Agent Governance: add `.agent/governance.yaml` with `policy: agent-governance`, `version: "2026.09.8"`, `spec_version: 1`, `learning.mode: propose-only`, `validation.global_evals: true`, and `agents.path` / `skills.path` pointing at `.github/agents` and `.github/skills`; add a caller workflow that `uses: sushilti80/agent-governance/.github/workflows/agent-governance.yml@v2026.09.8` with `permissions: contents: read` and `copilot-requests: write`. Keep Copilot agents and skills in those GitHub paths; pin the same immutable tag/SHA until you upgrade; do not vendor scripts or schemas.
+Paste this prompt in a consumer/product repo (`OWNER/agent-governance` is this public repo or your org’s policy fork; keep the version and tag in lockstep):
 
-If this repository is private, also pass the `agents-governance` GitHub App secrets. Details: `docs/CI-GOVERNANCE.md`, `docs/ROLLOUT.md`, `examples/.agent/governance.yaml`.
+> Wire Agent Governance: add `.agent/governance.yaml` with `policy: agent-governance`, `version: "2026.09.8"`, `spec_version: 1`, `learning.mode: propose-only`, `validation.global_evals: true`, and `agents.path` / `skills.path` pointing at `.github/agents` and `.github/skills`; add a caller workflow that `uses: OWNER/agent-governance/.github/workflows/agent-governance.yml@v2026.09.8` with `permissions: contents: read` and `copilot-requests: write`. Keep Copilot agents and skills in those GitHub paths; pin the same immutable tag/SHA until you upgrade; do not copy scripts or schemas into this product repo.
+
+If the policy repository is private, also pass the `agents-governance` GitHub App secrets. Details: `docs/CI-GOVERNANCE.md`, `docs/ROLLOUT.md`, `examples/.agent/governance.yaml`.
 
 ## License
 
