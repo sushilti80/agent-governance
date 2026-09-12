@@ -31,35 +31,13 @@ The root `VERSION` file is the single authoritative governance release version. 
 
 See `docs/VERSIONING-AND-RELEASES.md` for compatibility and release rules.
 
-## Repository layout
+## Use in your repository
 
-```text
-VERSION                     Canonical governance release version
-CHANGELOG.md                Release history
-principles/                 Constitution and machine-readable governance policies
-schemas/                    Contracts for manifests, agents, skills, learning, and semantic results
-evals/global/               Organization-wide behavioral evaluation specifications
-scripts/                    Deterministic governance, semantic context/result, and release checks
-tests/                      Regression and calibration fixtures
-docs/                       Design, semantic, learning, CI, release, and rollout guidance
-examples/                   Schema-valid bootstrap examples
-LICENSE                     MIT license
-CONTRIBUTING.md             How to run checks, review, and send feedback
-SECURITY.md                 Private vulnerability reporting
-.github/workflows/          Reusable governance and release-guard workflows
-```
+Paste this prompt in the consumer repo (do not fork or copy this policy repo):
 
-## Adoption
+> Wire Agent Governance: add `.agent/governance.yaml` with `policy: agent-governance`, `version: "2026.09.8"`, `spec_version: 1`, `learning.mode: propose-only`, `validation.global_evals: true`, and `agents.path` / `skills.path` pointing at `.github/agents` and `.github/skills`; add a caller workflow that `uses: sushilti80/agent-governance/.github/workflows/agent-governance.yml@v2026.09.8` with `permissions: contents: read` and `copilot-requests: write`. Keep Copilot agents and skills in those GitHub paths; pin the same immutable tag/SHA until you upgrade; do not vendor scripts or schemas.
 
-Each governed repository contains `.agent/governance.yaml` declaring the governance specification version, exact policy version, agent/skill locations, learning mode, and evaluation requirements. Repositories may add local constraints and evals, but must not weaken organization invariants.
-
-The reusable workflow checks out the adopting repository and the governance policy into separate roots. Policy identity comes directly from `job.workflow_repository` + `job.workflow_sha`; callers provide one immutable governance reference in `uses:`.
-
-When this repository is public, consumers can call the reusable workflow without a GitHub App. If the governance source is private, cross-repository policy checkout uses an `agents-governance` GitHub App with a short-lived Contents: Read token. Semantic review uses the caller workflow `GITHUB_TOKEN` with `copilot-requests: write`; no separate OpenAI API secret is required.
-
-Consumers remain on their pinned governance commit until deliberately upgraded.
-
-See `docs/CI-GOVERNANCE.md`, `docs/ROLLOUT.md`, `docs/LEARNING-GOVERNANCE.md`, and `docs/SEMANTIC-GOVERNANCE.md`.
+If this repository is private, also pass the `agents-governance` GitHub App secrets. Details: `docs/CI-GOVERNANCE.md`, `docs/ROLLOUT.md`, `examples/.agent/governance.yaml`.
 
 ## License
 
