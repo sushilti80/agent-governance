@@ -1,7 +1,7 @@
 spec_version: 1
 governance:
-  policy: aya-agent-governance
-  version: "2026.09.7"
+  policy: agent-governance
+  version: "2026.09.8"
 profile:
   type: governance
 agents:

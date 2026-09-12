@@ -2,6 +2,18 @@
 
 All notable governance changes are recorded here. Governance release tags are immutable and use `v<VERSION>`.
 
+## [2026.09.8] - 2026-09-12
+
+### Changed
+
+- GitHub Actions jobs now run on GitHub-hosted `ubuntu-latest` instead of a private self-hosted runner.
+- GitHub App secrets for cross-repository policy checkout are optional so a public governance repository can be consumed without an App.
+- Policy identifier, schema titles, semantic artifact directory, and documentation are org-neutral for public review (`agent-governance`, `.semantic-judge/`).
+- Central and example governance manifests now declare policy release `2026.09.8`; governance manifest `spec_version` remains `1`.
+- Public-release hygiene: MIT license, CODEOWNERS (`@sushilti80`), contributing guide, and private vulnerability reporting instructions.
+- Semantic Copilot/Luna CI is skipped on fork pull requests so contributors without Copilot credentials are not blocked; deterministic gates still run.
+- The semantic judge model is configurable through the `semantic_model` workflow input; `gpt-5.6-luna` remains the default while lower-cost Copilot-supported models can be selected without editing the workflow.
+
 ## [2026.09.7] - 2026-09-08
 
 ### Changed
@@ -34,7 +46,7 @@ All notable governance changes are recorded here. Governance release tags are im
 
 ### Fixed
 
-- Removed `--no-banner` from the pinned Copilot CLI `1.0.83` invocation after the Aya-Flux pilot proved that stable binary rejects the option even though the current online CLI reference documents it.
+- Removed `--no-banner` from the pinned Copilot CLI `1.0.83` invocation after a Copilot CLI pilot proved that stable binary rejects the option even though the current online CLI reference documents it.
 - Removed the undocumented `--auth-token-env` dependency and now use GitHub's documented Copilot token environment precedence, explicitly copying `GITHUB_TOKEN` into `COPILOT_GITHUB_TOKEN` only when the dedicated secret is absent.
 - Added a runtime compatibility preflight that checks the actual installed Copilot CLI help output for every nontrivial option used by semantic governance before the Luna judge is invoked.
 - Regression coverage now prevents reintroducing unsupported or undocumented CLI flags into the stable semantic-judge contract.
@@ -73,7 +85,7 @@ All notable governance changes are recorded here. Governance release tags are im
 - Change classification now emits `semantic_review_required` independently of highest governance risk so mixed R4 + agent/skill changes still receive semantic review.
 - The reusable governance workflow grants `copilot-requests: write`, invokes pinned Copilot CLI `1.0.83` with `gpt-5.6-luna`, and validates the judge JSON before reporting it.
 - Semantic review runs outside the target repository with custom instructions and built-in MCP disabled and read/shell/write/URL/memory tools denied.
-- Semantic filesystem locations are fixed workspace children (`target/`, `policy/`, `.aya-semantic-judge/`) with containment validation; semantic scripts no longer accept target, policy, schema, input, or output paths from CLI arguments.
+- Semantic filesystem locations are fixed workspace children (`target/`, `policy/`, `.semantic-judge/`) with containment validation; semantic scripts no longer accept target, policy, schema, input, or output paths from CLI arguments.
 - Semantic `FAIL`, `REVIEW`, malformed output, and Copilot invocation failures are report-only during calibration and do not yet block merge.
 - Governance Actions moved from Node-20-era `actions/checkout@v4` / `actions/setup-python@v5` to `actions/checkout@v5` / `actions/setup-python@v6`; the semantic job explicitly uses Node 24.
 - Central and example governance manifests now declare policy release `2026.09.3`; `spec_version` remains `1`.
@@ -83,7 +95,7 @@ All notable governance changes are recorded here. Governance release tags are im
 ### Added
 
 - AGP-013 through AGP-016 covering coherent behavioral contracts, authority non-expansion, role separation, and stop-or-escalate behavior.
-- A stakeholder-oriented Aya Agent Constitution documenting the composed-agent model, instruction hierarchy, effective-authority intersection, role ownership, and governance CI roadmap.
+- A stakeholder-oriented Agent Constitution documenting the composed-agent model, instruction hierarchy, effective-authority intersection, role ownership, and governance CI roadmap.
 
 ### Changed
 
@@ -113,4 +125,4 @@ All notable governance changes are recorded here. Governance release tags are im
 - Regression tests cover critical governance invariants.
 - Governance versioning, compatibility, release readiness, and immutable-tag policy are now self-validated.
 - Reusable workflow policy checkout is derived from the exact called-job workflow repository and commit SHA, removing the duplicate policy-ref input and ref-mismatch failure mode.
-- Cross-repository policy checkout now uses a short-lived, read-only token minted by the organization-owned `agents-governance` GitHub App while same-repository validation continues to use `github.token`.
+- Cross-repository policy checkout may use a short-lived, read-only token minted by a GitHub App, while same-repository validation continues to use `github.token`.

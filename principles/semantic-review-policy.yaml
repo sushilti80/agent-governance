@@ -1,9 +1,11 @@
 spec_version: 1
 mode: report-only
-purpose: Evaluate behavior-affecting agent changes against the Aya Agent Constitution before promotion.
+purpose: Evaluate behavior-affecting agent changes against the Agent Constitution before promotion.
 judge:
   runtime: github-copilot-cli
   model: gpt-5.6-luna
+  model_workflow_input: semantic_model
+  model_override_allowed: true
   reasoning_effort: medium
   cli_version: "1.0.83"
   tools: none

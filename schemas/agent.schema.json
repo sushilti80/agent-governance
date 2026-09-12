@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aya.dev/agent-governance/schemas/agent.schema.json",
-  "title": "Aya Agent Metadata",
+  "$id": "https://github.com/sushilti80/agent-governance/schemas/agent.schema.json",
+  "title": "Agent Metadata",
   "type": "object",
   "additionalProperties": true,
   "required": ["name", "mission", "scope", "authority", "evidence", "success_criteria"],

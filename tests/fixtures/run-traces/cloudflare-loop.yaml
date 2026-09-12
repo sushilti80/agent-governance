@@ -1,6 +1,6 @@
 spec_version: 1
 run:
-  repository: Aya-DevOpsTeam/aya-flux
+  repository: example-org/demo-agent-repo
   agent: flux-addon-onboarding
   task: Cloudflared onboarding failure replay
   run_id: cloudflare-loop-example

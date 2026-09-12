@@ -2,7 +2,7 @@
 
 ## Two different versions
 
-Aya Agent Governance intentionally separates schema compatibility from policy release identity.
+Agent Governance intentionally separates schema compatibility from policy release identity.
 
 ### `spec_version`
 
@@ -18,7 +18,7 @@ Governed repositories declare that exact version in `.agent/governance.yaml`:
 
 ```yaml
 governance:
-  policy: aya-agent-governance
+  policy: agent-governance
   version: "<contents-of-VERSION>"
 ```
 

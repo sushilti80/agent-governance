@@ -1,6 +1,6 @@
 # Agent Design Principles
 
-The machine-readable source of truth is `principles/agent-design.yaml`. The stakeholder-oriented constitutional rationale is documented in `docs/AYA-AGENT-CONSTITUTION.md`.
+The machine-readable source of truth is `principles/agent-design.yaml`. The stakeholder-oriented constitutional rationale is documented in `docs/AGENT-CONSTITUTION.md`.
 
 ## Design hierarchy
 

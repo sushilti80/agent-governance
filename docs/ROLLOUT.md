@@ -3,7 +3,7 @@
 ## Phase 1 — bootstrap this repository
 
 - Merge principles, schemas, global eval specifications, deterministic checks, docs, and reusable workflow.
-- Protect governance files with CODEOWNERS using the actual Aya platform team once its GitHub team slug is confirmed.
+- Protect governance files with CODEOWNERS (`@sushilti80`) and enable required pull-request review from code owners on `main`.
 - Keep the initial workflow deterministic and dependency-light.
 
 ## Phase 2 — observe organization repositories

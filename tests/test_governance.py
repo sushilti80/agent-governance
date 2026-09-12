@@ -64,10 +64,10 @@ class GovernanceRegressionTests(unittest.TestCase):
         self.assertIn("propose-only", result.stdout)
 
     def test_wrong_policy_name_is_rejected(self) -> None:
-        invalid = VALID_MANIFEST.replace("policy: aya-agent-governance", "policy: other-governance")
+        invalid = VALID_MANIFEST.replace("policy: agent-governance", "policy: other-governance")
         result = self.run_checker(invalid)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("aya-agent-governance", result.stdout)
+        self.assertIn("agent-governance", result.stdout)
 
     def test_wrong_spec_version_is_rejected(self) -> None:
         invalid = VALID_MANIFEST.replace("spec_version: 1", "spec_version: 2")

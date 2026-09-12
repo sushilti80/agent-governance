@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   verify-release:
-    runs-on: aya-devops-rs
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout tagged policy
         uses: actions/checkout@v5

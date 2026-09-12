@@ -1,6 +1,6 @@
-# Aya Agent Governance
+# Agent Governance
 
-Central source of truth for the design, validation, evaluation, and controlled learning of Aya engineering agents.
+Central source of truth for the design, validation, evaluation, and controlled learning of engineering agents.
 
 ## Core contract
 
@@ -14,7 +14,7 @@ Central source of truth for the design, validation, evaluation, and controlled l
 8. **Authority only narrows.** Effective authority is the intersection of governance, repository policy, agent authority, task scope, and approvals; lower layers cannot broaden it.
 9. **Stop or escalate.** Stop after validated success; when evidence, authority, approval, or policy is insufficient, escalate rather than guessing or widening scope.
 
-The machine-readable constitution is `principles/agent-design.yaml`. See `docs/AYA-AGENT-CONSTITUTION.md` for the stakeholder rationale and `docs/AGENT-DESIGN-PRINCIPLES.md` for implementation guidance.
+The machine-readable constitution is `principles/agent-design.yaml`. See `docs/AGENT-CONSTITUTION.md` for the stakeholder rationale and `docs/AGENT-DESIGN-PRINCIPLES.md` for implementation guidance.
 
 ## Governance layers
 
@@ -43,6 +43,9 @@ scripts/                    Deterministic governance, semantic context/result, a
 tests/                      Regression and calibration fixtures
 docs/                       Design, semantic, learning, CI, release, and rollout guidance
 examples/                   Schema-valid bootstrap examples
+LICENSE                     MIT license
+CONTRIBUTING.md             How to run checks, review, and send feedback
+SECURITY.md                 Private vulnerability reporting
 .github/workflows/          Reusable governance and release-guard workflows
 ```
 
@@ -52,8 +55,20 @@ Each governed repository contains `.agent/governance.yaml` declaring the governa
 
 The reusable workflow checks out the adopting repository and the governance policy into separate roots. Policy identity comes directly from `job.workflow_repository` + `job.workflow_sha`; callers provide one immutable governance reference in `uses:`.
 
-Cross-repository policy checkout uses the organization-owned `agents-governance` GitHub App with a short-lived Contents: Read token. Semantic review uses the caller workflow `GITHUB_TOKEN` with `copilot-requests: write`; no separate OpenAI API secret is required.
+When this repository is public, consumers can call the reusable workflow without a GitHub App. If the governance source is private, cross-repository policy checkout uses an `agents-governance` GitHub App with a short-lived Contents: Read token. Semantic review uses the caller workflow `GITHUB_TOKEN` with `copilot-requests: write`; no separate OpenAI API secret is required.
 
 Consumers remain on their pinned governance commit until deliberately upgraded.
 
 See `docs/CI-GOVERNANCE.md`, `docs/ROLLOUT.md`, `docs/LEARNING-GOVERNANCE.md`, and `docs/SEMANTIC-GOVERNANCE.md`.
+
+## License
+
+This repository is licensed under the [MIT License](LICENSE).
+
+## Contributing and security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for local checks, CODEOWNERS review, fork CI, and how to send feedback.
+
+See [SECURITY.md](SECURITY.md) to report vulnerabilities privately. Do not file public issues for security-sensitive findings. Maintainer: [@sushilti80](https://github.com/sushilti80).
+
+Semantic Copilot/Luna review requires Copilot access and is skipped on fork pull requests. Deterministic governance remains blocking. Semantic verdicts are report-only until a later explicit promotion.

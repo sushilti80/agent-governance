@@ -3,12 +3,24 @@ name: Agent Governance
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      semantic_model:
+        description: Copilot model used for semantic governance
+        required: false
+        default: gpt-5.6-luna
+        type: string
   workflow_call:
+    inputs:
+      semantic_model:
+        description: Copilot model used for semantic governance
+        required: false
+        default: gpt-5.6-luna
+        type: string
     secrets:
       governance_app_client_id:
-        required: true
+        required: false
       governance_app_private_key:
-        required: true
+        required: false
       COPILOT_GITHUB_TOKEN:
         required: false
 
@@ -22,7 +34,9 @@ concurrency:
 jobs:
   deterministic-governance:
     name: deterministic-governance
-    runs-on: aya-devops-rs
+    runs-on: ubuntu-latest
+    env:
+      GOVERNANCE_APP_CLIENT_ID: ${{ secrets.governance_app_client_id }}
     steps:
       - name: Checkout target repository
         uses: actions/checkout@v5
@@ -32,7 +46,7 @@ jobs:
 
       - name: Create governance repository token
         id: governance-token
-        if: ${{ job.workflow_repository != github.repository }}
+        if: ${{ job.workflow_repository != github.repository && env.GOVERNANCE_APP_CLIENT_ID != '' }}
         uses: actions/create-github-app-token@v3
         with:
           client-id: ${{ secrets.governance_app_client_id }}
@@ -71,7 +85,9 @@ jobs:
 
   classify-change:
     name: classify-change
-    runs-on: aya-devops-rs
+    runs-on: ubuntu-latest
+    env:
+      GOVERNANCE_APP_CLIENT_ID: ${{ secrets.governance_app_client_id }}
     outputs:
       highest_risk: ${{ steps.classify.outputs.highest_risk }}
       semantic_review_required: ${{ steps.classify.outputs.semantic_review_required }}
@@ -85,7 +101,7 @@ jobs:
 
       - name: Create governance repository token
         id: governance-token
-        if: ${{ job.workflow_repository != github.repository }}
+        if: ${{ job.workflow_repository != github.repository && env.GOVERNANCE_APP_CLIENT_ID != '' }}
         uses: actions/create-github-app-token@v3
         with:
           client-id: ${{ secrets.governance_app_client_id }}
@@ -141,8 +157,10 @@ jobs:
   semantic-governance:
     name: semantic-governance-report
     needs: classify-change
-    if: ${{ needs.classify-change.outputs.semantic_review_required == 'true' || needs.classify-change.outputs.semantic_contract_changed == 'true' }}
-    runs-on: aya-devops-rs
+    if: ${{ (needs.classify-change.outputs.semantic_review_required == 'true' || needs.classify-change.outputs.semantic_contract_changed == 'true') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: ubuntu-latest
+    env:
+      GOVERNANCE_APP_CLIENT_ID: ${{ secrets.governance_app_client_id }}
     permissions:
       contents: read
       copilot-requests: write
@@ -155,7 +173,7 @@ jobs:
 
       - name: Create governance repository token
         id: governance-token
-        if: ${{ job.workflow_repository != github.repository }}
+        if: ${{ job.workflow_repository != github.repository && env.GOVERNANCE_APP_CLIENT_ID != '' }}
         uses: actions/create-github-app-token@v3
         with:
           client-id: ${{ secrets.governance_app_client_id }}
@@ -227,8 +245,8 @@ jobs:
         if: ${{ needs.classify-change.outputs.semantic_review_required != 'true' && needs.classify-change.outputs.semantic_contract_changed == 'true' }}
         shell: bash
         run: |
-          mkdir -p .aya-semantic-judge
-          cat > .aya-semantic-judge/context.json <<'JSON'
+          mkdir -p .semantic-judge
+          cat > .semantic-judge/context.json <<'JSON'
           {
             "schema_version": 1,
             "base_sha": "semantic-contract-smoke-base",
@@ -253,22 +271,27 @@ jobs:
           python policy/scripts/build_semantic_prompt.py
 
       - id: judge
-        name: Evaluate with GPT-5.6 Luna
+        name: Evaluate with configured Copilot model
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}
+          SEMANTIC_MODEL: ${{ inputs.semantic_model || 'gpt-5.6-luna' }}
         shell: bash
         run: |
           set +e
-          cd "$GITHUB_WORKSPACE/.aya-semantic-judge"
+          cd "$GITHUB_WORKSPACE/.semantic-judge"
 
           if [ -z "${COPILOT_GITHUB_TOKEN:-}" ]; then
             export COPILOT_GITHUB_TOKEN="$GITHUB_TOKEN"
           fi
+          if [[ ! "$SEMANTIC_MODEL" =~ ^[A-Za-z0-9._-]+$ ]]; then
+            echo "::error::Invalid semantic model name"
+            exit 2
+          fi
 
           copilot \
             -s \
-            --model gpt-5.6-luna \
+            --model "$SEMANTIC_MODEL" \
             --reasoning-effort medium \
             --no-ask-user \
             --no-custom-instructions \
@@ -301,5 +324,5 @@ jobs:
             --mode report-only \
             --judge-exit-code "$JUDGE_EXIT_CODE"
           validation_code=$?
-          cat .aya-semantic-judge/summary.md >> "$GITHUB_STEP_SUMMARY"
+          cat .semantic-judge/summary.md >> "$GITHUB_STEP_SUMMARY"
           exit "$validation_code"

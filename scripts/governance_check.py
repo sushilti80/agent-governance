@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic governance checks for Aya policy and adopting repositories."""
+"""Deterministic governance checks for this policy and adopting repositories."""
 from __future__ import annotations
 
 import argparse

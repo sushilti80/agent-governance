@@ -1,10 +1,10 @@
 id: LR-2026-0002
 observed_failure:
-  repository: Aya-DevOpsTeam/aya-flux
+  repository: example-org/demo-agent-repo
   task: Cloudflared add-on onboarding
   description: Runtime execution repeatedly delegated and revisited equivalent investigation paths, consuming excessive tokens and degrading final synthesis quality despite strong local agent and skill guardrails.
 evidence:
-  - runtime-observation:aya-flux-cloudflared-2026-09-03
+  - runtime-observation:demo-cloudflared-2026-09-03
 classification:
   cause: delegation bounded by depth and parallelism but not by total run budget or evidence-based forward progress
   layer: global-governance

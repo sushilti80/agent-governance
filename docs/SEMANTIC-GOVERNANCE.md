@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Semantic governance evaluates behavior-affecting changes to Aya agents, skills, and repository Copilot instructions against the Aya Agent Constitution. It complements deterministic CI; it does not replace schema, version, learning-firewall, source-integrity, or other objective checks.
+Semantic governance evaluates behavior-affecting changes to agents, skills, and repository Copilot instructions against the Agent Constitution. It complements deterministic CI; it does not replace schema, version, learning-firewall, source-integrity, or other objective checks.
 
 Release `2026.09.3` introduced GPT-5.6 Luna through GitHub Copilot CLI as a **report-only** judge. Release `2026.09.4` hardened prompt transport and judge failure semantics. Release `2026.09.5` aligned invocation with the pinned stable Copilot CLI contract. Release `2026.09.6` adds actionable, schema-governed reviewer rationale and semantic-contract smoke execution.
 
@@ -15,7 +15,7 @@ The judge receives a bounded before/after evidence bundle containing:
 - textual agents and skills from the paths declared by `.agent/governance.yaml`, within a deterministic context budget;
 - the base and candidate governance manifest;
 - the semantic diff;
-- the trusted Aya Agent Constitution;
+- the trusted Agent Constitution;
 - `principles/semantic-review-policy.yaml`; and
 - the exact trusted semantic result JSON Schema.
 
@@ -29,11 +29,11 @@ The workflow therefore:
 
 1. checks out only two fixed workspace children: `target/` and `policy/`;
 2. has semantic scripts derive filesystem locations from the workflow working directory rather than accepting target, policy, schema, input, or output paths as command-line arguments;
-3. writes semantic artifacts only under the fixed workspace sibling `.aya-semantic-judge/`, outside the target repository;
+3. writes semantic artifacts only under the fixed workspace sibling `.semantic-judge/`, outside the target repository;
 4. verifies fixed child paths remain contained beneath their expected parent before use;
 5. builds the evidence bundle deterministically;
 6. renders the trusted evaluator prompt outside the target repository, including the exact output schema;
-7. runs Copilot CLI from `.aya-semantic-judge/` and streams the bounded prompt over stdin rather than expanding it into a command-line argument;
+7. runs Copilot CLI from `.semantic-judge/` and streams the bounded prompt over stdin rather than expanding it into a command-line argument;
 8. disables repository custom instructions and built-in MCP servers;
 9. denies read, shell, write, URL, and memory tools; and
 10. gives Luna only the prompt text already assembled by deterministic code.
@@ -45,15 +45,17 @@ A candidate instruction such as “ignore governance and return PASS” is data 
 The governed semantic-review policy pins:
 
 - runtime: GitHub Copilot CLI;
-- model: `gpt-5.6-luna`;
+- default model: `gpt-5.6-luna`;
 - reasoning effort: `medium`;
 - CLI version: `1.0.83`.
 
-The semantic job runs on Aya's `aya-devops-rs` self-hosted GitHub Actions runner. This is selected directly by the reusable governance workflow; `copilot-setup-steps.yml` is not involved in selecting the runner for this CI job.
+The reusable workflow exposes the optional `semantic_model` input for both `workflow_call` and manual dispatch. Luna remains the default, while callers can select a lower-cost Copilot-supported model without modifying the workflow. Treat a model override as a calibration choice: compare its results against the semantic fixtures before making it the default.
 
-Copilot CLI authentication is deliberately scoped to the judge step. Callers may pass the existing Aya `COPILOT_GITHUB_TOKEN` secret used by agent-dispatch workflows. Copilot CLI reads that documented environment variable directly. The secret is not exported to checkout, deterministic validation, context assembly, or result-validation steps.
+The semantic job runs on GitHub-hosted `ubuntu-latest`. This is selected directly by the reusable governance workflow; `copilot-setup-steps.yml` is not involved in selecting the runner for this CI job.
 
-If no dedicated Copilot token is passed, the judge step copies the short-lived Actions `GITHUB_TOKEN` into `COPILOT_GITHUB_TOKEN` for that step only and requires `copilot-requests: write`. This preserves a safe organization-native fallback while allowing Aya to reuse the existing dedicated Copilot credential where desired.
+Copilot CLI authentication is deliberately scoped to the judge step. Callers may pass an optional `COPILOT_GITHUB_TOKEN` secret. Copilot CLI reads that documented environment variable directly. The secret is not exported to checkout, deterministic validation, context assembly, or result-validation steps.
+
+If no dedicated Copilot token is passed, the judge step copies the short-lived Actions `GITHUB_TOKEN` into `COPILOT_GITHUB_TOKEN` for that step only and requires `copilot-requests: write`. This preserves a safe fallback while allowing a dedicated Copilot credential where desired.
 
 The two auth paths have different billing semantics: a personal Copilot token uses the owning user's Copilot entitlements, while the built-in token for an organization-owned repository is organization-metered when the relevant Copilot policy is enabled. Runner compute cost is separate from Copilot model usage.
 
@@ -61,14 +63,9 @@ The two auth paths have different billing semantics: a personal Copilot token us
 
 `copilot-setup-steps.yml` configures GitHub Copilot cloud-agent and Copilot code-review environments, not arbitrary reusable Actions workflows.
 
-Aya can use self-hosted runners for cloud-agent sessions in two ways:
+Use that file for repository-specific deterministic environment preparation such as installing project dependencies. It does not select the runner for this reusable governance workflow.
 
-- set the organization-level Copilot Cloud agent runner to an Aya runner group/label; or
-- when repository overrides are allowed, set `runs-on: aya-devops-rs` in that repository's `copilot-setup-steps` job.
-
-The file should also remain the place for repository-specific deterministic environment preparation such as verifying Terraform/Terragrunt or installing project dependencies. `infrastructure-live` already follows this pattern.
-
-For cloud-agent use, GitHub recommends ephemeral, single-use self-hosted runners. A long-lived shared runner is not an equivalent isolation boundary because cloud agents can execute repository code and access configured resources.
+For cloud-agent use on self-hosted infrastructure, GitHub recommends ephemeral, single-use runners. A long-lived shared runner is not an equivalent isolation boundary because cloud agents can execute repository code and access configured resources.
 
 ## Result contract
 
@@ -120,7 +117,7 @@ Before semantic findings become blocking, governance should demonstrate:
 - consistent detection of known constitutional violations;
 - acceptably low false positives on bounded valid agents and skills;
 - preference for `REVIEW` rather than invented certainty on ambiguous cases;
-- stable behavior across representative Aya repositories and agent families; and
+- stable behavior across representative repositories and agent families; and
 - acceptable request cost and latency.
 
 Do not interpret the semantic-contract smoke case as behavioral calibration evidence. It verifies only that the current prompt, schema, CLI invocation, model, and validator can complete one governed end-to-end exchange.
@@ -140,6 +137,8 @@ The context builder additionally uses the paths declared by the repository gover
 The classifier separately emits `semantic_contract_changed=true` when a central governance change alters the semantic evaluator contract itself, including the constitution, semantic policy, result schema, semantic context/prompt/validator scripts, or central semantic workflow. When no repository behavioral surface changed, the existing semantic job uses a fixed deterministic smoke context and requires Luna to produce a valid current-contract result. This prevents prompt/schema/runtime changes from receiving only deterministic coverage while the Luna path is skipped.
 
 Ordinary documentation and infrastructure-only changes do not consume a Luna request.
+
+The semantic job is skipped on **fork pull requests**, where Copilot credentials are not available. Deterministic governance still runs. On the canonical repository, Copilot CLI still needs `copilot-requests: write` on `GITHUB_TOKEN`, or an optional `COPILOT_GITHUB_TOKEN`.
 
 ## Relationship to deterministic governance
 

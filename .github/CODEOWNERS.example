@@ -1,8 +1,0 @@
-# Rename to CODEOWNERS after replacing the placeholder with the real Aya team slug.
-# Do not guess a team name: an invalid CODEOWNERS identity silently weakens the intended review policy.
-
-# * @Aya-DevOpsTeam/<agent-platform-team>
-# /principles/ @Aya-DevOpsTeam/<agent-platform-team>
-# /schemas/ @Aya-DevOpsTeam/<agent-platform-team>
-# /.github/workflows/ @Aya-DevOpsTeam/<agent-platform-team>
-# /scripts/ @Aya-DevOpsTeam/<agent-platform-team>

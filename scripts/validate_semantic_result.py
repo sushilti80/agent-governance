@@ -9,7 +9,7 @@ from typing import Any
 
 from jsonschema import Draft202012Validator
 
-ARTIFACT_DIR_NAME = ".aya-semantic-judge"
+ARTIFACT_DIR_NAME = ".semantic-judge"
 REVIEW_ACTIONS = {
     "CONSIDER_SIMPLIFICATION",
     "CHANGE_RECOMMENDED",
@@ -106,7 +106,7 @@ def render_summary(
     errors: list[str],
     judge_exit_code: int | None,
 ) -> str:
-    lines = ["## Aya semantic governance", ""]
+    lines = ["## Semantic governance", ""]
     if status == "INVALID":
         lines.extend(
             [

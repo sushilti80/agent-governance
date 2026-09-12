@@ -120,7 +120,7 @@ class ActionableSemanticReviewTests(unittest.TestCase):
             workspace = Path(directory) / "workspace"
             (workspace / "policy" / "schemas").mkdir(parents=True)
             shutil.copy2(SCHEMA, workspace / "policy" / "schemas" / SCHEMA.name)
-            artifact = workspace / ".aya-semantic-judge"
+            artifact = workspace / ".semantic-judge"
             artifact.mkdir()
             (artifact / "raw-result.json").write_text(json.dumps(result), encoding="utf-8")
             proc = subprocess.run(

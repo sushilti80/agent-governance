@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aya.dev/agent-governance/schemas/skill.schema.json",
-  "title": "Aya Skill Metadata",
+  "$id": "https://github.com/sushilti80/agent-governance/schemas/skill.schema.json",
+  "title": "Skill Metadata",
   "type": "object",
   "additionalProperties": true,
   "required": ["name", "purpose", "triggers", "procedure", "validation"],

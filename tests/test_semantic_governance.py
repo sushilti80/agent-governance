@@ -16,7 +16,7 @@ CONTEXT_BUILDER = POLICY_ROOT / "scripts" / "build_semantic_context.py"
 PROMPT_BUILDER = POLICY_ROOT / "scripts" / "build_semantic_prompt.py"
 RESULT_VALIDATOR = POLICY_ROOT / "scripts" / "validate_semantic_result.py"
 CLASSIFIER = POLICY_ROOT / "scripts" / "check_changed_agent_files.py"
-ARTIFACT_DIR = ".aya-semantic-judge"
+ARTIFACT_DIR = ".semantic-judge"
 
 
 def copy_policy_inputs(workspace: Path) -> Path:
@@ -108,7 +108,7 @@ class SemanticGovernanceTests(unittest.TestCase):
             (repo / ".github" / "skills" / "storage").mkdir(parents=True)
             (repo / ".agent" / "governance.yaml").write_text("""spec_version: 1
 governance:
-  policy: aya-agent-governance
+  policy: agent-governance
   version: \"2026.09.3\"
 profile:
   type: test

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build bounded before/after context for Aya semantic governance."""
+"""Build bounded before/after context for semantic governance."""
 from __future__ import annotations
 
 import argparse
@@ -14,7 +14,7 @@ MAX_TOTAL_CHARS = 180_000
 MAX_FILE_CHARS = 40_000
 MAX_DIFF_CHARS = 60_000
 TEXT_SUFFIXES = {".md", ".txt", ".yaml", ".yml", ".json"}
-ARTIFACT_DIR_NAME = ".aya-semantic-judge"
+ARTIFACT_DIR_NAME = ".semantic-judge"
 FIXED_SEMANTIC_PREFIXES = (
     ".github/instructions",
     ".github/prompts",

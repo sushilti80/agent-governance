@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aya.dev/agent-governance/schemas/agent-run-trace.schema.json",
-  "title": "Aya Agent Run Trace",
+  "$id": "https://github.com/sushilti80/agent-governance/schemas/agent-run-trace.schema.json",
+  "title": "Agent Run Trace",
   "type": "object",
   "additionalProperties": false,
   "required": ["spec_version", "run", "outcome", "events"],

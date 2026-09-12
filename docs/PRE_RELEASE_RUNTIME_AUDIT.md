@@ -14,7 +14,7 @@ A repository should not be considered governance-ready merely because its prompt
 
 ## Why runtime evidence is included
 
-Static agent instructions can look correct while runtime behavior still loops. The Aya Flux Cloudflared onboarding observation is the first concrete evidence case for this gap; it is retained as a minimized negative fixture, not as the policy's scope or design center.
+Static agent instructions can look correct while runtime behavior still loops. A Cloudflared add-on onboarding observation is the first concrete evidence case for this gap; it is retained as a minimized negative fixture, not as the policy's scope or design center.
 
 The runtime audit therefore evaluates normalized execution traces rather than adding technology-specific prompt prose.
 
@@ -129,4 +129,4 @@ A technology-specific incident may trigger learning, but promotion happens only 
 
 ## Current limitation
 
-The original Cloudflared runtime log is not stored in this repository, so the negative fixture is a minimized replay of the observed pattern, not a verbatim reconstruction. Before enabling enforcement, ingest representative real traces from `aya-flux`, `landingzone-live`, and at least one additional agent family if the rule is intended to be organization-wide.
+The original Cloudflared runtime log is not stored in this repository, so the negative fixture is a minimized replay of the observed pattern, not a verbatim reconstruction. Before enabling enforcement, ingest representative real traces from more than one agent family if the rule is intended to be organization-wide.

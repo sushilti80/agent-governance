@@ -24,7 +24,7 @@ The reusable workflow checks out two roots separately:
 - **target root** — the caller/adopting repository;
 - **policy root** — the exact repository and commit SHA defining the called governance job, derived from `job.workflow_repository` and `job.workflow_sha`.
 
-Cross-repository policy checkout uses the organization-owned `agents-governance` GitHub App only for a short-lived read-only policy token. Consumers do not copy central governance scripts.
+Cross-repository policy checkout uses a GitHub App token only when the governance repository is private and App secrets are supplied. Public policy checkouts use the caller token. Consumers do not copy central governance scripts.
 
 ## Gate 2 — deterministic design lint
 
@@ -61,6 +61,8 @@ The result must conform to `schemas/semantic-judge-result.schema.json` and is ma
 Semantic governance is **report-only**.
 
 `PASS`, `REVIEW`, and `FAIL` are surfaced in the Actions job summary, but semantic findings do not yet block merge. Invalid or missing judge output is reported as `INVALID` and also remains non-blocking during calibration.
+
+The Copilot/Luna job is skipped on fork pull requests. Deterministic governance remains blocking on every pull request.
 
 See `docs/SEMANTIC-GOVERNANCE.md`.
 
@@ -101,14 +103,18 @@ permissions:
 
 jobs:
   agent-governance:
-    uses: Aya-DevOpsTeam/agent-governance/.github/workflows/agent-governance.yml@<immutable-governance-ref>
+    uses: sushilti80/agent-governance/.github/workflows/agent-governance.yml@<immutable-governance-ref>
+    with:
+      semantic_model: gpt-5.6-luna
     secrets:
-      governance_app_client_id: ${{ secrets.AGENT_GOVERNANCE_APP_CLIENT_ID }}
-      governance_app_private_key: ${{ secrets.AGENT_GOVERNANCE_APP_PRIVATE_KEY }}
       COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
 ```
 
-`COPILOT_GITHUB_TOKEN` is optional during the report-only rollout. When supplied, it is injected only into the Luna invocation step and Copilot CLI is explicitly told to authenticate from that environment variable. This reuses the same dedicated Copilot credential pattern already used by Aya agent-dispatch workflows without exposing that credential to checkout, Python, or governance-validation steps.
+When the governance repository is private, also pass `governance_app_client_id` and `governance_app_private_key`. Those secrets are optional for a public policy repository because GitHub-hosted jobs can check out public policy without an App token.
+
+`semantic_model` is optional and defaults to the currently governed `gpt-5.6-luna`. Set it to a lower-cost model identifier supported by Copilot CLI when desired; no workflow edit is required. Model changes should be calibrated against the semantic fixtures before becoming the new default.
+
+`COPILOT_GITHUB_TOKEN` is optional during the report-only rollout. When supplied, it is injected only into the model invocation step. Copilot CLI authenticates from that environment variable. The secret is not exposed to checkout, Python, or governance-validation steps.
 
 If the dedicated Copilot token is not supplied, the semantic job falls back to the short-lived Actions `GITHUB_TOKEN`; that fallback requires `copilot-requests: write`. GitHub currently recommends the built-in token for organization-owned automation because it is short-lived and organization-metered. A supplied personal Copilot token instead authenticates as its owning user and consumes that user's Copilot entitlements. Choose deliberately based on billing and credential-lifecycle policy.
 
@@ -118,15 +124,11 @@ The target `.agent/governance.yaml` must declare the policy version represented 
 
 ## Runner and cost model
 
-The central governance workflow and release guard run on the Aya-owned `aya-devops-rs` self-hosted runner instead of `ubuntu-latest`. This avoids GitHub-hosted Actions minute charges; Aya remains responsible for the underlying runner infrastructure. GitHub's current billing documentation states that self-hosted runner usage itself is free in GitHub Actions.
+The central governance workflow and release guard run on GitHub-hosted `ubuntu-latest` runners. A repository's `.github/workflows/copilot-setup-steps.yml` does **not** select the runner for this reusable CI workflow.
 
-The reusable governance workflow selects its runner directly with `runs-on: aya-devops-rs`. A repository's `.github/workflows/copilot-setup-steps.yml` does **not** select the runner for this reusable CI workflow.
+`copilot-setup-steps.yml` belongs to a different execution surface: GitHub Copilot cloud agent and Copilot code review. Use it for repository-specific dependency or environment preparation, not to pin this reusable workflow's runner.
 
-`copilot-setup-steps.yml` belongs to a different execution surface: GitHub Copilot cloud agent and Copilot code review. For cloud-agent sessions, Aya should prefer the organization-level Copilot Cloud agent runner setting when one runner policy applies broadly, and use repository `copilot-setup-steps.yml` for repository-specific dependency/environment preparation or an allowed runner override. `infrastructure-live` already uses `runs-on: aya-devops-rs` in its setup workflow.
-
-Moving work to Aya-owned runners changes compute billing only. Copilot CLI model usage and premium-request/AI-credit accounting remain separate from GitHub Actions runner cost.
-
-For Copilot cloud agent on self-hosted infrastructure, GitHub recommends ephemeral, single-use runners rather than long-lived shared runners. That recommendation should be treated as a security requirement for future production-scale cloud-agent rollout, particularly because cloud agents can execute repository code and access configured resources.
+GitHub Actions compute cost is separate from Copilot CLI model usage and premium-request/AI-credit accounting.
 
 ## Workflow runtime maintenance
 
@@ -140,6 +142,6 @@ The GitHub App token action remains `actions/create-github-app-token@v3`.
 
 ## Promotion to blocking semantic governance
 
-Semantic enforcement requires a separate R4 policy change after calibration. Before promotion, review real Aya PR results and the fixture corpus for false positives, false negatives, ambiguity handling, cost, and latency.
+Semantic enforcement requires a separate R4 policy change after calibration. Before promotion, review real PR results and the fixture corpus for false positives, false negatives, ambiguity handling, cost, and latency.
 
 Deterministic gates remain blocking throughout. Semantic judgment must never be allowed to waive a deterministic failure.

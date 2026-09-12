@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aya.dev/agent-governance/schemas/semantic-judge-result.schema.json",
-  "title": "Aya Semantic Governance Judge Result",
+  "$id": "https://github.com/sushilti80/agent-governance/schemas/semantic-judge-result.schema.json",
+  "title": "Semantic Governance Judge Result",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "verdict", "summary", "reviewer_action", "context", "assessment", "findings", "recommended_outcome"],

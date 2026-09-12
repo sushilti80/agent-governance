@@ -1,14 +1,14 @@
-# Aya Agent Constitution
+# Agent Constitution
 
 ## Purpose
 
-The Aya Agent Constitution defines the organization-wide design invariants every governed agent system must preserve. It intentionally states **what must be true**. Specialized policies define how delegation, tools, learning, semantic review, runtime efficiency, and release management operationalize those invariants.
+The Agent Constitution defines the organization-wide design invariants every governed agent system must preserve. It intentionally states **what must be true**. Specialized policies define how delegation, tools, learning, semantic review, runtime efficiency, and release management operationalize those invariants.
 
 The machine-readable constitution is `principles/agent-design.yaml`. This document is the stakeholder-oriented explanation of the architecture and governance model.
 
 ## Core model
 
-Aya separates responsibilities deliberately:
+This governance model separates responsibilities deliberately:
 
 1. **Agent = intent and authority.** Mission, scope, evidence, mutation/external-action authority, success criteria, and escalation.
 2. **Skill = procedure.** Reusable procedure and validation within authority inherited from the calling context.
@@ -37,7 +37,7 @@ A lower layer may specialize or narrow inherited behavior. It may not broaden au
 
 ## Effective authority
 
-Aya defines effective authority as an intersection:
+Effective authority is an intersection:
 
 ```text
 Effective authority
@@ -169,11 +169,11 @@ Consumer repositories execute an immutable pinned governance reference. A centra
 
 ## Current maturity statement
 
-After release `2026.09.3`, Aya governance can accurately claim:
+After release `2026.09.3`, this governance can accurately claim:
 
 - deterministic central governance is active;
-- the sixteen-principle Aya Agent Constitution is active;
-- cross-repository governance policy checkout is authenticated with a short-lived GitHub App token;
+- the sixteen-principle Agent Constitution is active;
+- cross-repository policy checkout uses a GitHub App token only when the governance repository is private and App secrets are supplied;
 - GPT-5.6 Luna semantic review is active for behavior-affecting prompt changes **when consumers adopt the release**, but remains report-only;
 - semantic output is schema-validated and cannot override deterministic failures;
 - runtime efficiency auditing exists but real cloud-agent trace ingestion is not yet broadly active; and

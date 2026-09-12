@@ -1,0 +1,6 @@
+# CODEOWNERS requires GitHub "Require review from Code Owners" on the default branch.
+* @sushilti80
+/principles/ @sushilti80
+/schemas/ @sushilti80
+/.github/workflows/ @sushilti80
+/scripts/ @sushilti80

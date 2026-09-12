@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aya.dev/agent-governance/schemas/learning-record.schema.json",
-  "title": "Aya Learning Record",
+  "$id": "https://github.com/sushilti80/agent-governance/schemas/learning-record.schema.json",
+  "title": "Learning Record",
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "observed_failure", "evidence", "classification", "proposed_change", "evaluation", "promotion"],
