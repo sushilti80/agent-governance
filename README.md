@@ -1,6 +1,8 @@
-# Agent Governance
+# Aya Agent Governance
 
-Central source of truth for the design, validation, evaluation, and controlled learning of engineering agents.
+Central source of truth for the design, validation, evaluation, security testing, and controlled learning of Aya engineering agents.
+
+For common operating questions, see [`docs/FAQ.md`](docs/FAQ.md).
 
 ## Core contract
 
@@ -14,16 +16,17 @@ Central source of truth for the design, validation, evaluation, and controlled l
 8. **Authority only narrows.** Effective authority is the intersection of governance, repository policy, agent authority, task scope, and approvals; lower layers cannot broaden it.
 9. **Stop or escalate.** Stop after validated success; when evidence, authority, approval, or policy is insufficient, escalate rather than guessing or widening scope.
 
-The machine-readable constitution is `principles/agent-design.yaml`. See `docs/AGENT-CONSTITUTION.md` for the stakeholder rationale and `docs/AGENT-DESIGN-PRINCIPLES.md` for implementation guidance.
+The machine-readable constitution is `principles/agent-design.yaml`. See `docs/AYA-AGENT-CONSTITUTION.md` for the stakeholder rationale and `docs/AGENT-DESIGN-PRINCIPLES.md` for implementation guidance.
 
 ## Governance layers
 
 - **Deterministic governance — blocking:** schema, version, policy integrity, learning firewall, constitution integrity, source identity, regression checks.
-- **Semantic governance — report-only:** GPT-5.6 Luna evaluates base-versus-candidate agent/skill/Copilot-instruction changes against AGP-001 through AGP-016.
-- **Behavioral eval specifications — governed catalog:** current CI protects the specifications but does not yet execute every case against every changed consumer agent.
+- **Semantic governance — report-only:** GPT-6 Luna evaluates base-versus-candidate agent/skill/Copilot-instruction changes against AGP-001 through AGP-016.
+- **Repository behavioral evals — Promptfoo report-only findings:** consumer-local `.agent/evals/*.yaml` cases execute against the declared agent contract when `validation.repository_evals: true`; provider/harness failures are blocking. Organization-wide `evals/global/` remains a governed catalog rather than an exhaustive per-agent fan-out.
+- **Adversarial red-team governance — report-only findings:** Promptfoo runs a bounded Aya-owned security corpus against behavior-changing contracts; framework/provider failures remain blocking.
 - **Runtime efficiency — report-only engine:** runtime enforcement is not active until real cloud-agent telemetry is connected and calibrated.
 
-See `docs/SEMANTIC-GOVERNANCE.md` and `docs/CI-GOVERNANCE.md` for exact enforcement maturity.
+See `docs/SEMANTIC-GOVERNANCE.md`, `docs/REPOSITORY-EVALS.md`, `docs/REDTEAM-GOVERNANCE.md`, and `docs/CI-GOVERNANCE.md` for exact enforcement maturity.
 
 ## Version contract
 
@@ -31,24 +34,44 @@ The root `VERSION` file is the single authoritative governance release version. 
 
 See `docs/VERSIONING-AND-RELEASES.md` for compatibility and release rules.
 
-## Use in your repository
+## Repository layout
 
-An organization that wants to **own** policy should fork or mirror this repository **once** into their org, release their own immutable tags, and point every product repo at that copy. Product repos should not clone or vendor the policy; they only pin the reusable workflow.
+```text
+VERSION                     Canonical governance release version
+CHANGELOG.md                Release history
+principles/                 Constitution and machine-readable governance policies
+schemas/                    Contracts for manifests, agents, skills, learning, and semantic results
+evals/global/               Organization-wide behavioral evaluation specifications
+redteam/                    Bounded Promptfoo adversarial cases and configuration
+scripts/                    Deterministic governance, semantic/red-team/repository-eval providers, and release checks
+tests/                      Regression and calibration fixtures
+docs/                       Design, semantic, red-team, learning, CI, release, and rollout guidance
+examples/                   Schema-valid bootstrap examples
+.github/workflows/          Reusable governance and release-guard workflows
+```
 
-Paste this prompt in a consumer/product repo (`OWNER/agent-governance` is this public repo or your org’s policy fork; keep the version and tag in lockstep):
+## Adoption
 
-> Wire Agent Governance: add `.agent/governance.yaml` with `policy: agent-governance`, `version: "2026.09.8"`, `spec_version: 1`, `learning.mode: propose-only`, `validation.global_evals: true`, and `agents.path` / `skills.path` pointing at `.github/agents` and `.github/skills`; add a caller workflow that `uses: OWNER/agent-governance/.github/workflows/agent-governance.yml@v2026.09.8` with `permissions: contents: read` and `copilot-requests: write`. Keep Copilot agents and skills in those GitHub paths; pin the same immutable tag/SHA until you upgrade; do not copy scripts or schemas into this product repo.
+Each governed repository contains `.agent/governance.yaml` declaring the governance specification version, exact policy version, agent/skill locations, learning mode, and evaluation requirements. Repositories may add local constraints and `.agent/evals/*.yaml` behavioral cases, but must not weaken organization invariants. Set `validation.repository_evals: true` only when a valid local eval catalog is present and should execute in PR governance.
 
-If the policy repository is private, also pass the `agents-governance` GitHub App secrets. Details: `docs/CI-GOVERNANCE.md`, `docs/ROLLOUT.md`, `examples/.agent/governance.yaml`.
+The reusable workflow checks out the adopting repository and the governance policy into separate roots. Policy identity comes directly from `job.workflow_repository` + `job.workflow_sha`; callers provide one immutable governance reference in `uses:`.
 
-## License
+Cross-repository policy checkout uses the organization-owned `agents-governance` GitHub App with a short-lived Contents: Read token. Semantic and red-team model evaluation use the caller workflow `GITHUB_TOKEN` with `copilot-requests: write`; no separate OpenAI API secret is required.
 
-This repository is licensed under the [MIT License](LICENSE).
+### Bootstrap a target repository with Copilot
 
-## Contributing and security
+Run Copilot from the root of the target repository and give it this prompt:
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for local checks, CODEOWNERS review, fork CI, and how to send feedback.
+```text
+Wire this repository to Aya central agent governance from Aya-DevOpsTeam/agent-governance.
 
-See [SECURITY.md](SECURITY.md) to report vulnerabilities privately. Do not file public issues for security-sensitive findings. Maintainer: [@sushilti80](https://github.com/sushilti80).
+First inspect the existing repository instructions, agents, skills, CI workflows, and any current `.agent/governance.yaml`. Preserve existing behavior and CI unless a change is required for governance adoption.
 
-Semantic Copilot/Luna review requires Copilot access and is skipped on fork pull requests. Deterministic governance remains blocking. Semantic verdicts are report-only until a later explicit promotion.
+Use the latest approved immutable governance release/tag from the central repository, not `main`. Add or update `.agent/governance.yaml` with the correct profile and existing agent/skill paths, and add the reusable Agent Governance workflow using the central workflow at that same immutable release. Configure only the permissions/secrets required by the documented central workflow; do not copy central governance scripts, schemas, red-team cases, or policy files into this repository.
+
+Validate the resulting YAML and workflow wiring, show the files changed and any required repository/org secrets or GitHub App prerequisites, and do not alter application/infrastructure code as part of governance onboarding.
+```
+
+Consumers remain on their pinned governance commit until deliberately upgraded.
+
+See `docs/CI-GOVERNANCE.md`, `docs/ROLLOUT.md`, `docs/LEARNING-GOVERNANCE.md`, `docs/SEMANTIC-GOVERNANCE.md`, `docs/REPOSITORY-EVALS.md`, and `docs/REDTEAM-GOVERNANCE.md`.

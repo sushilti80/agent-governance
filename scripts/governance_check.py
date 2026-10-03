@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic governance checks for this policy and adopting repositories."""
+"""Deterministic governance checks for Aya policy and adopting repositories."""
 from __future__ import annotations
 
 import argparse
@@ -244,6 +244,128 @@ def check_target_learning_records(policy_root: Path, target_root: Path, failures
         )
 
 
+def _agent_frontmatter_name(path: Path) -> str | None:
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    if not text.startswith("---"):
+        return None
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        return None
+    try:
+        data = yaml.safe_load(parts[1])
+    except yaml.YAMLError:
+        return None
+    if not isinstance(data, dict):
+        return None
+    value = data.get("name")
+    return value.strip() if isinstance(value, str) and value.strip() else None
+
+
+def _target_agent_index(
+    target_root: Path,
+    manifest: dict[str, Any],
+    failures: list[str],
+) -> dict[str, Path]:
+    configured = manifest.get("agents", {}).get("path")
+    if not isinstance(configured, str) or not configured.strip():
+        fail("governance manifest is missing agents.path for repository eval resolution", failures)
+        return {}
+
+    directory = target_root / configured
+    if not directory.is_dir():
+        fail(f"declared agent directory does not exist: {configured}", failures)
+        return {}
+
+    agents: dict[str, Path] = {}
+    for path in sorted(directory.rglob("*.md")):
+        name = _agent_frontmatter_name(path)
+        if not name:
+            continue
+        if name in agents:
+            fail(
+                f"duplicate agent frontmatter name {name!r}: "
+                f"{agents[name].relative_to(target_root)} and {path.relative_to(target_root)}",
+                failures,
+            )
+            continue
+        agents[name] = path
+    return agents
+
+
+def check_target_repository_evals(
+    policy_root: Path,
+    target_root: Path,
+    manifest: dict[str, Any] | None,
+    failures: list[str],
+) -> None:
+    if not manifest:
+        return
+
+    eval_dir = target_root / ".agent" / "evals"
+    files = sorted([*eval_dir.glob("*.yaml"), *eval_dir.glob("*.yml")]) if eval_dir.is_dir() else []
+    enabled = manifest.get("validation", {}).get("repository_evals") is True
+
+    try:
+        schema = load_json(policy_root / "schemas" / "repository-eval.schema.json")
+    except Exception as exc:
+        fail(f"unable to load repository eval schema: {exc}", failures)
+        return
+
+    validator = Draft202012Validator(schema)
+    agents = _target_agent_index(target_root, manifest, failures) if files else {}
+    seen_ids: dict[str, Path] = {}
+    case_count = 0
+
+    for path in files:
+        try:
+            documents = list(yaml.safe_load_all(path.read_text(encoding="utf-8")))
+        except yaml.YAMLError as exc:
+            fail(f"unable to parse repository eval file {path.relative_to(target_root)}: {exc}", failures)
+            continue
+
+        for index, case in enumerate(documents, start=1):
+            if case is None:
+                continue
+            errors = sorted(validator.iter_errors(case), key=lambda err: list(err.absolute_path))
+            if errors:
+                for error in errors:
+                    fail(
+                        f"repository eval {path.relative_to(target_root)} document {index}: "
+                        f"{format_validation_path(error)}: {error.message}",
+                        failures,
+                    )
+                continue
+
+            case_count += 1
+            case_id = case["id"]
+            if case_id in seen_ids:
+                fail(
+                    f"duplicate repository eval id {case_id}: "
+                    f"{seen_ids[case_id].relative_to(target_root)} and {path.relative_to(target_root)}",
+                    failures,
+                )
+            else:
+                seen_ids[case_id] = path
+
+            agent_name = case["agent"]
+            if agent_name not in agents:
+                fail(
+                    f"repository eval {case_id} references unknown agent {agent_name!r}",
+                    failures,
+                )
+
+    if enabled and case_count == 0:
+        fail(
+            "validation.repository_evals is true but .agent/evals contains no valid eval cases",
+            failures,
+        )
+    elif case_count:
+        mode = "execution enabled" if enabled else "catalog-only; execution disabled"
+        print(f"PASS: repository eval catalog valid ({case_count} cases; {mode})")
+    else:
+        print("PASS: no repository eval catalog declared; execution disabled")
+
+
 def check_principles(policy_root: Path, failures: list[str]) -> None:
     path = policy_root / "principles" / "agent-design.yaml"
     try:
@@ -389,6 +511,7 @@ def main() -> int:
     check_workflow_contract(policy_root, failures)
     manifest = check_target_manifest(policy_root, target_root, canonical_version, failures)
     check_target_learning_records(policy_root, target_root, failures)
+    check_target_repository_evals(policy_root, target_root, manifest, failures)
     lint_prompts(target_root, manifest)
 
     if failures:

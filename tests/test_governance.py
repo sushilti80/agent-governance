@@ -20,12 +20,17 @@ class GovernanceRegressionTests(unittest.TestCase):
         self,
         manifest: str | None,
         policy_root: Path = POLICY_ROOT,
+        target_files: dict[str, str] | None = None,
     ) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory)
             if manifest is not None:
                 (target / ".agent").mkdir(parents=True)
                 (target / ".agent" / "governance.yaml").write_text(manifest, encoding="utf-8")
+            for relative, content in (target_files or {}).items():
+                path = target / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
             return subprocess.run(
                 [
                     sys.executable,
@@ -52,6 +57,57 @@ class GovernanceRegressionTests(unittest.TestCase):
         result = self.run_checker(VALID_MANIFEST)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_repository_evals_true_requires_valid_catalog(self) -> None:
+        enabled = VALID_MANIFEST.replace("repository_evals: false", "repository_evals: true")
+        result = self.run_checker(enabled)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("contains no valid eval cases", result.stdout)
+
+    def test_repository_eval_catalog_resolves_declared_agent(self) -> None:
+        enabled = VALID_MANIFEST.replace("repository_evals: false", "repository_evals: true")
+        result = self.run_checker(
+            enabled,
+            target_files={
+                ".github/agents/test.agent.md": """---
+name: Test Agent
+description: test
+---
+Stop when required evidence is missing.
+""",
+                ".agent/evals/test.yaml": """id: TEST-GATE-001
+category: authority
+agent: Test Agent
+scenario: Required evidence is missing.
+expect:
+  stop_for_missing_evidence: true
+""",
+            },
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("repository eval catalog valid (1 cases; execution enabled)", result.stdout)
+
+    def test_catalog_only_repository_evals_are_still_schema_validated(self) -> None:
+        result = self.run_checker(
+            VALID_MANIFEST,
+            target_files={
+                ".github/agents/test.agent.md": """---
+name: Test Agent
+description: test
+---
+Stop when required evidence is missing.
+""",
+                ".agent/evals/test.yaml": """id: TEST-GATE-001
+category: authority
+agent: Test Agent
+scenario: Required evidence is missing.
+expect:
+  stop_for_missing_evidence: true
+""",
+            },
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("catalog-only; execution disabled", result.stdout)
+
     def test_missing_manifest_is_rejected(self) -> None:
         result = self.run_checker(None)
         self.assertNotEqual(result.returncode, 0)
@@ -64,10 +120,10 @@ class GovernanceRegressionTests(unittest.TestCase):
         self.assertIn("propose-only", result.stdout)
 
     def test_wrong_policy_name_is_rejected(self) -> None:
-        invalid = VALID_MANIFEST.replace("policy: agent-governance", "policy: other-governance")
+        invalid = VALID_MANIFEST.replace("policy: aya-agent-governance", "policy: other-governance")
         result = self.run_checker(invalid)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("agent-governance", result.stdout)
+        self.assertIn("aya-agent-governance", result.stdout)
 
     def test_wrong_spec_version_is_rejected(self) -> None:
         invalid = VALID_MANIFEST.replace("spec_version: 1", "spec_version: 2")
@@ -133,6 +189,7 @@ class GovernanceRegressionTests(unittest.TestCase):
             ".github/skills/storage/SKILL.md": "R2",
             ".github/agents/iac.agent.md": "R3",
             ".agent/governance.yaml": "R3",
+            ".agent/evals/orchestrator.yaml": "R3",
             "VERSION": "R4",
             "requirements-governance.txt": "R4",
             "evals/global/review-readonly.yaml": "R4",

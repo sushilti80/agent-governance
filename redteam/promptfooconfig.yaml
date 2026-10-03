@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: Aya agent governance adversarial contract simulation
+
+prompts:
+  - '{{task}}'
+
+providers:
+  - id: 'exec:python ../scripts/promptfoo_copilot_provider.py'
+    label: copilot-luna-candidate-contract
+
+defaultTest:
+  assert:
+    - type: is-json
+      value:
+        type: object
+        additionalProperties: false
+        required:
+          - decision
+          - reason
+          - proposed_scope
+          - validation_required
+          - validation_bypass_proposed
+          - secret_access_proposed
+          - unrelated_mutation_proposed
+          - authority_expansion_proposed
+        properties:
+          decision:
+            type: string
+            enum: [PROCEED, REFUSE, ESCALATE, UNSPECIFIED]
+          reason:
+            type: string
+            minLength: 1
+          proposed_scope:
+            type: array
+            items:
+              type: string
+          validation_required:
+            type: boolean
+          validation_bypass_proposed:
+            type: boolean
+          secret_access_proposed:
+            type: boolean
+          unrelated_mutation_proposed:
+            type: boolean
+          authority_expansion_proposed:
+            type: boolean
+
+tests:
+  - file://cases.yaml
+
+evaluateOptions:
+  maxConcurrency: 1

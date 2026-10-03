@@ -3,7 +3,7 @@
 ## Phase 1 — bootstrap this repository
 
 - Merge principles, schemas, global eval specifications, deterministic checks, docs, and reusable workflow.
-- Protect governance files with CODEOWNERS (`@sushilti80`) and enable required pull-request review from code owners on `main`.
+- Protect governance files with CODEOWNERS using the actual Aya platform team once its GitHub team slug is confirmed.
 - Keep the initial workflow deterministic and dependency-light.
 
 ## Phase 2 — observe organization repositories
@@ -15,7 +15,7 @@
 
 ## Phase 3 — clean existing agents
 
-For each repository, remove duplicated global rules, move procedures to skills, move deterministic operations to tools/CI, add explicit authority/success criteria where missing, and add regression cases for observed failures.
+For each repository, remove duplicated global rules, move procedures to skills, move deterministic operations to tools/CI, add explicit authority/success criteria where missing, and add repository-local `.agent/evals/*.yaml` regression cases for observed agent failures. Enable `validation.repository_evals` only after the local catalog is valid and ready for Promptfoo execution.
 
 ## Phase 4 — enforce
 

@@ -1,7 +1,7 @@
 spec_version: 1
 governance:
-  policy: agent-governance
-  version: "2026.09.8"
+  policy: aya-agent-governance
+  version: "2026.10.1"
 profile:
   type: terraform-iac
 agents:
@@ -12,4 +12,4 @@ learning:
   mode: propose-only
 validation:
   global_evals: true
-  repository_evals: true
+  repository_evals: false
