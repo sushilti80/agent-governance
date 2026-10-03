@@ -245,8 +245,8 @@ jobs:
         if: ${{ needs.classify-change.outputs.semantic_review_required != 'true' && needs.classify-change.outputs.semantic_contract_changed == 'true' }}
         shell: bash
         run: |
-          mkdir -p .semantic-judge
-          cat > .semantic-judge/context.json <<'JSON'
+          mkdir -p .aya-semantic-judge
+          cat > .aya-semantic-judge/context.json <<'JSON'
           {
             "schema_version": 1,
             "base_sha": "semantic-contract-smoke-base",
@@ -279,7 +279,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          cd "$GITHUB_WORKSPACE/.semantic-judge"
+          cd "$GITHUB_WORKSPACE/.aya-semantic-judge"
 
           if [ -z "${COPILOT_GITHUB_TOKEN:-}" ]; then
             export COPILOT_GITHUB_TOKEN="$GITHUB_TOKEN"
@@ -324,5 +324,5 @@ jobs:
             --mode report-only \
             --judge-exit-code "$JUDGE_EXIT_CODE"
           validation_code=$?
-          cat .semantic-judge/summary.md >> "$GITHUB_STEP_SUMMARY"
+          cat .aya-semantic-judge/summary.md >> "$GITHUB_STEP_SUMMARY"
           exit "$validation_code"

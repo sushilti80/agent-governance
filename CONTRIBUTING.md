@@ -28,7 +28,7 @@ python3 -m venv .venv
 .venv/bin/python scripts/governance_check.py --policy-root . --target-root .
 ```
 
-Do not commit `.DS_Store`, `.venv/`, `.semantic-judge/`, credentials, or production logs.
+Do not commit `.DS_Store`, `.venv/`, `.aya-semantic-judge/`, credentials, or production logs.
 
 ## Semantic review in CI
 
