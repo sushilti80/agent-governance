@@ -152,13 +152,13 @@ The target `.agent/governance.yaml` must declare the policy version represented 
 
 ## Runner and cost model
 
-The central governance workflow and release guard run on the Aya-owned `aya-devops-rs` self-hosted runner instead of `ubuntu-latest`. This avoids GitHub-hosted Actions minute charges; Aya remains responsible for the underlying runner infrastructure.
+The central governance workflow and release guard run on GitHub-hosted `ubuntu-latest` runners. GitHub Actions usage may incur charges depending on the account's plan and included minutes.
 
-The reusable governance workflow selects its runner directly with `runs-on: aya-devops-rs`. A repository's `.github/workflows/copilot-setup-steps.yml` does **not** select the runner for this reusable CI workflow.
+The reusable governance workflow selects its runner directly with `runs-on: ubuntu-latest`. A repository's `.github/workflows/copilot-setup-steps.yml` does **not** select the runner for this reusable CI workflow.
 
-`copilot-setup-steps.yml` belongs to a different execution surface: GitHub Copilot cloud agent and Copilot code review. For cloud-agent sessions, Aya should prefer the organization-level Copilot Cloud agent runner setting when one runner policy applies broadly, and use repository `copilot-setup-steps.yml` for repository-specific dependency/environment preparation or an allowed runner override. `infrastructure-live` already uses `runs-on: aya-devops-rs` in its setup workflow.
+`copilot-setup-steps.yml` belongs to a different execution surface: GitHub Copilot cloud agent and Copilot code review. For cloud-agent sessions, use the organization-level Copilot Cloud agent runner setting when one runner policy applies broadly, and use repository `copilot-setup-steps.yml` for repository-specific dependency/environment preparation or an allowed runner override.
 
-Moving work to Aya-owned runners changes compute billing only. Copilot CLI model usage and premium-request/AI-credit accounting remain separate from GitHub Actions runner cost.
+GitHub Actions runner charges and Copilot CLI model usage or premium-request/AI-credit accounting are separate costs.
 
 For Copilot cloud agent on self-hosted infrastructure, ephemeral, single-use runners should be preferred over long-lived shared runners, particularly because cloud agents can execute repository code and access configured resources.
 

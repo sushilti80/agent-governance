@@ -191,7 +191,7 @@ The organization-owned governance GitHub App provides a short-lived read-only to
 
 ### Where does governance CI run?
 
-The central workflow uses the Aya-owned `aya-devops-rs` self-hosted runner. Runner compute cost and Copilot model/premium-request accounting are separate concerns.
+The central workflow uses GitHub-hosted `ubuntu-latest` runners. GitHub Actions runner charges and Copilot model or premium-request accounting are separate costs.
 
 ## Troubleshooting and operations
 

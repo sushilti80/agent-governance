@@ -49,7 +49,7 @@ The governed semantic-review policy pins:
 - reasoning effort: `medium`;
 - CLI version: `1.0.83`.
 
-The semantic job runs on Aya's `aya-devops-rs` self-hosted GitHub Actions runner. This is selected directly by the reusable governance workflow; `copilot-setup-steps.yml` is not involved in selecting the runner for this CI job.
+The semantic job runs on a GitHub-hosted `ubuntu-latest` runner, selected directly by the reusable governance workflow. `copilot-setup-steps.yml` does not select the runner for this CI job.
 
 Copilot CLI authentication is deliberately scoped to the judge step. Callers may pass the existing Aya `COPILOT_GITHUB_TOKEN` secret used by agent-dispatch workflows. Copilot CLI reads that documented environment variable directly. The secret is not exported to checkout, deterministic validation, context assembly, or result-validation steps.
 
@@ -61,10 +61,10 @@ The two auth paths have different billing semantics: a personal Copilot token us
 
 `copilot-setup-steps.yml` configures GitHub Copilot cloud-agent and Copilot code-review environments, not arbitrary reusable Actions workflows.
 
-Aya can use self-hosted runners for cloud-agent sessions in two ways:
+You can configure the runner for cloud-agent sessions in two ways:
 
-- set the organization-level Copilot Cloud agent runner to an Aya runner group/label; or
-- when repository overrides are allowed, set `runs-on: aya-devops-rs` in that repository's `copilot-setup-steps` job.
+- set the organization-level Copilot Cloud agent runner; or
+- when repository overrides are allowed, configure the runner in that repository's `copilot-setup-steps` job.
 
 The file should also remain the place for repository-specific deterministic environment preparation such as verifying Terraform/Terragrunt or installing project dependencies. `infrastructure-live` already follows this pattern.
 

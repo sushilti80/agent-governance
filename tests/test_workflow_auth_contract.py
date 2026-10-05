@@ -142,17 +142,17 @@ class WorkflowAuthContractTests(unittest.TestCase):
         self.assertIn("comment.user.login === 'github-actions[bot]'", workflow)
         self.assertIn("github.event.pull_request.head.repo.full_name == github.repository", workflow)
 
-    def test_governance_workflows_use_aya_self_hosted_runner(self) -> None:
+    def test_governance_workflows_use_github_hosted_runner(self) -> None:
         _, jobs = load_workflow()
         release = yaml.safe_load(
             (POLICY_ROOT / ".github" / "workflows" / "release-guard.yml").read_text(encoding="utf-8")
         )
         for job_name, job in jobs.items():
             with self.subTest(job=job_name):
-                self.assertEqual(job.get("runs-on"), "aya-devops-rs")
+                self.assertEqual(job.get("runs-on"), "ubuntu-latest")
         for job_name, job in release["jobs"].items():
             with self.subTest(release_job=job_name):
-                self.assertEqual(job.get("runs-on"), "aya-devops-rs")
+                self.assertEqual(job.get("runs-on"), "ubuntu-latest")
 
     def test_workflows_use_node24_generation_actions(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
