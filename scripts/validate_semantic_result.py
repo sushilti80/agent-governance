@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and summarize GPT-5.6 Luna semantic-governance output."""
+"""Validate and summarize Luna semantic-governance output."""
 from __future__ import annotations
 
 import argparse
@@ -9,7 +9,7 @@ from typing import Any
 
 from jsonschema import Draft202012Validator
 
-ARTIFACT_DIR_NAME = ".semantic-judge"
+ARTIFACT_DIR_NAME = ".aya-semantic-judge"
 REVIEW_ACTIONS = {
     "CONSIDER_SIMPLIFICATION",
     "CHANGE_RECOMMENDED",
@@ -106,7 +106,7 @@ def render_summary(
     errors: list[str],
     judge_exit_code: int | None,
 ) -> str:
-    lines = ["## Semantic governance", ""]
+    lines = ["## Aya semantic governance", ""]
     if status == "INVALID":
         lines.extend(
             [

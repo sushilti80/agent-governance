@@ -120,7 +120,7 @@ class ActionableSemanticReviewTests(unittest.TestCase):
             workspace = Path(directory) / "workspace"
             (workspace / "policy" / "schemas").mkdir(parents=True)
             shutil.copy2(SCHEMA, workspace / "policy" / "schemas" / SCHEMA.name)
-            artifact = workspace / ".semantic-judge"
+            artifact = workspace / ".aya-semantic-judge"
             artifact.mkdir()
             (artifact / "raw-result.json").write_text(json.dumps(result), encoding="utf-8")
             proc = subprocess.run(
@@ -225,6 +225,15 @@ class ActionableSemanticReviewTests(unittest.TestCase):
         self.assertIn("Use this decision matrix exactly", text)
         self.assertIn("Do not expose private chain-of-thought", text)
         self.assertIn("Do not report numeric or qualitative confidence scores", text)
+
+    def test_prompt_pins_assessment_shape_and_finding_evidence_location(self) -> None:
+        text = PROMPT_BUILDER.read_text(encoding="utf-8")
+        self.assertIn("assessment` must contain exactly these three properties", text)
+        self.assertIn("what_changed", text)
+        self.assertIn("why_it_matters", text)
+        self.assertIn("Put repository evidence supporting a finding only in that finding's `evidence` array", text)
+        self.assertIn("do not emit `assessment.evidence_supporting_each_finding`", text)
+        self.assertIn("place them only in `findings[].evidence`", text)
 
 
 if __name__ == "__main__":
