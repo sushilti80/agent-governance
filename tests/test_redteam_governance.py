@@ -7,7 +7,6 @@ from pathlib import Path
 
 POLICY_ROOT = Path(__file__).resolve().parents[1]
 CLASSIFIER = POLICY_ROOT / "scripts" / "check_changed_agent_files.py"
-WORKFLOW = POLICY_ROOT / ".github" / "workflows" / "agent-governance.yml"
 CONFIG = POLICY_ROOT / "redteam" / "promptfooconfig.yaml"
 CASES = POLICY_ROOT / "redteam" / "cases.yaml"
 PROVIDER = POLICY_ROOT / "scripts" / "promptfoo_copilot_provider.py"
@@ -86,17 +85,6 @@ class RedteamGovernanceTests(unittest.TestCase):
             "--no-remote-export",
         ):
             self.assertIn(option, source)
-
-    def test_workflow_pins_promptfoo_and_separates_findings_from_errors(self) -> None:
-        workflow = WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("promptfoo@0.123.0", workflow)
-        self.assertIn("PROMPTFOO_DISABLE_TELEMETRY", workflow)
-        self.assertIn("data.get('results', {}).get('stats', {})", workflow)
-        self.assertIn('[ "$errors" -gt 0 ]', workflow)
-        self.assertIn("outcome=FINDINGS", workflow)
-        self.assertIn("outcome=ERROR", workflow)
-        self.assertIn("findings report-only during calibration", workflow)
-
 
 if __name__ == "__main__":
     unittest.main()

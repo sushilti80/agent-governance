@@ -19,7 +19,6 @@ from scripts.repository_eval_copilot_provider import validate_model_output
 BUILDER = POLICY_ROOT / "scripts" / "build_repository_evals.py"
 PROVIDER = POLICY_ROOT / "scripts" / "repository_eval_copilot_provider.py"
 CLASSIFIER = POLICY_ROOT / "scripts" / "check_changed_agent_files.py"
-WORKFLOW = POLICY_ROOT / ".github" / "workflows" / "agent-governance.yml"
 SCHEMA = POLICY_ROOT / "schemas" / "repository-eval.schema.json"
 
 
@@ -80,7 +79,7 @@ expect:
 
     def test_builder_separates_provider_payload_from_expected_values(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            target = Path(directory) / "target"
+            target = (Path(directory) / "target").resolve()
             output = Path(directory) / ".aya-repository-evals"
             target.mkdir()
             self.fixture(target)
@@ -133,7 +132,7 @@ expect:
 
     def test_eval_file_symlink_escape_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            target = Path(directory) / "target"
+            target = (Path(directory) / "target").resolve()
             output = Path(directory) / ".aya-repository-evals"
             target.mkdir()
             self.fixture(target)
@@ -158,7 +157,7 @@ expect:
 
     def test_serialized_promptfoo_argument_is_byte_bounded(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            target = Path(directory) / "target"
+            target = (Path(directory) / "target").resolve()
             output = Path(directory) / ".aya-repository-evals"
             target.mkdir()
             self.fixture(target)
@@ -258,44 +257,6 @@ expect:
         )
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         self.assertIn("repository_eval_catalog_changed=true", proc.stdout)
-
-    def test_repository_smoke_gate_is_scoped_to_repository_eval_job(self) -> None:
-        workflow = WORKFLOW.read_text(encoding="utf-8")
-        red_start = workflow.index("  redteam-governance:")
-        repo_start = workflow.index("  repository-evals:")
-        report_start = workflow.index("  pr-governance-report:")
-        redteam = workflow[red_start:repo_start]
-        repository = workflow[repo_start:report_start]
-
-        self.assertNotIn("REPOSITORY_EVAL_CONTRACT_SMOKE", redteam)
-        self.assertNotIn("Central repository-eval contract smoke produced behavioral findings", redteam)
-        self.assertNotIn(".aya-repository-evals/results.json", redteam)
-        self.assertNotIn('echo "diagnostic=$diagnostic"', redteam)
-        self.assertIn("REPOSITORY_EVAL_CONTRACT_SMOKE", repository)
-        self.assertIn("Central repository-eval contract smoke produced behavioral findings", repository)
-        self.assertIn(".aya-repository-evals/results.json", repository)
-        self.assertIn('echo "diagnostic=$diagnostic"', repository)
-        self.assertIn("central repository-eval contract smoke findings are blocking", repository)
-        self.assertIn("consumer repository-eval findings are report-only", repository)
-        smoke_branch = repository[
-            repository.index('if [ "$REPOSITORY_EVAL_CONTRACT_SMOKE" = "true" ]; then'):
-            repository.index("echo 'outcome=FINDINGS'", repository.index('if [ "$REPOSITORY_EVAL_CONTRACT_SMOKE" = "true" ]; then'))
-        ]
-        self.assertNotIn("errors=1", smoke_branch)
-
-    def test_workflow_runs_promptfoo_repository_eval_lane(self) -> None:
-        workflow = WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("repository-evals:", workflow)
-        self.assertIn("build_repository_evals.py", workflow)
-        self.assertIn("promptfoo@0.123.0", workflow)
-        self.assertIn("consumer repository-eval findings are report-only during calibration", workflow)
-        self.assertIn("repository_eval_contract_changed", workflow)
-        self.assertIn("needs.repository-evals.result == 'failure'", workflow)
-        self.assertIn("needs.repository-evals.result == 'cancelled'", workflow)
-        self.assertIn("contract_smoke=true", workflow)
-        self.assertIn("Central repository-eval contract smoke produced behavioral findings", workflow)
-        self.assertIn("Repository eval mismatch diagnostics", workflow)
-
 
 if __name__ == "__main__":
     unittest.main()

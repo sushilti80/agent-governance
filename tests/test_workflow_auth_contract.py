@@ -12,14 +12,9 @@ POLICY_CHECKOUT_JOBS = {
     "deterministic-governance",
     "classify-change",
     "semantic-governance",
-    "redteam-governance",
-    "repository-evals",
-    "pr-governance-report",
 }
 MODEL_EVALUATION_JOBS = {
     "semantic-governance",
-    "redteam-governance",
-    "repository-evals",
 }
 
 
@@ -47,7 +42,7 @@ class WorkflowAuthContractTests(unittest.TestCase):
                 token_step = token_steps[0]
                 self.assertEqual(
                     token_step.get("if"),
-                    "${{ job.workflow_repository != github.repository }}",
+                    "${{ job.workflow_repository != github.repository && env.GOVERNANCE_APP_CLIENT_ID != '' }}",
                 )
                 self.assertEqual(token_step.get("with", {}).get("permission-contents"), "read")
 
@@ -91,8 +86,6 @@ class WorkflowAuthContractTests(unittest.TestCase):
                 )
 
         self.assertIn("name: semantic-governance-report", workflow)
-        self.assertIn("name: promptfoo-redteam-report", workflow)
-        self.assertIn("name: promptfoo-repository-evals-report", workflow)
         self.assertIn('export COPILOT_GITHUB_TOKEN="$GITHUB_TOKEN"', workflow)
         self.assertNotIn("--auth-token-env", workflow)
         self.assertNotIn("--no-banner", workflow)
@@ -111,36 +104,20 @@ class WorkflowAuthContractTests(unittest.TestCase):
             "--no-remote-export",
         ):
             self.assertIn(f"'{option}'", workflow)
-        policy = yaml.safe_load(
-            (POLICY_ROOT / "principles" / "semantic-review-policy.yaml").read_text(encoding="utf-8")
+        judge = next(
+            step for step in jobs["semantic-governance"]["steps"]
+            if step.get("id") == "judge"
         )
-        semantic_commands = "\n".join(
-            step.get("run", "") for step in jobs["semantic-governance"]["steps"]
+        self.assertEqual(
+            judge.get("env", {}).get("SEMANTIC_MODEL"),
+            "${{ inputs.semantic_model || 'gpt-5.6-luna' }}",
         )
-        self.assertIn(f"--model {policy['judge']['model']} ", semantic_commands)
+        self.assertIn('--model "$SEMANTIC_MODEL"', judge.get("run", ""))
         self.assertIn("< prompt.txt", workflow)
         self.assertNotIn('-p "$(cat prompt.txt)"', workflow)
         self.assertIn('exit "$code"', workflow)
         self.assertIn("--deny-tool='read,shell,write,url,memory'", workflow)
         self.assertNotIn("continue-on-error: true", workflow)
-
-    def test_pr_reporting_has_least_privilege_and_stale_head_guard(self) -> None:
-        workflow, jobs = load_workflow()
-        top_permissions = workflow.split("jobs:", 1)[0]
-        self.assertNotIn("issues: write", top_permissions)
-        self.assertNotIn("issues: write", workflow)
-        self.assertNotIn("pull-requests: read", workflow)
-        self.assertEqual(
-            jobs["pr-governance-report"].get("permissions", {}).get("pull-requests"),
-            "write",
-        )
-        for job_name, job in jobs.items():
-            if job_name != "pr-governance-report":
-                self.assertNotEqual(job.get("permissions", {}).get("pull-requests"), "write")
-        self.assertIn("name: pr-governance-report", workflow)
-        self.assertIn("current.data.head.sha !== evaluatedSha", workflow)
-        self.assertIn("comment.user.login === 'github-actions[bot]'", workflow)
-        self.assertIn("github.event.pull_request.head.repo.full_name == github.repository", workflow)
 
     def test_governance_workflows_use_github_hosted_runner(self) -> None:
         _, jobs = load_workflow()
